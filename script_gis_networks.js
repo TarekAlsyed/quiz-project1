@@ -55,13 +55,9 @@ const questions = [
     {type: 'mc', question: "شبكة بها 6 عقد و 7 وصلات (الحالة ب في الجدول)، كم تبلغ قيمة مؤشر بيتا (Beta)؟", options: ["1", "1.16", "0.85", "7"], answer: 1, difficulty: 'medium', topic: 'مؤشرات الترابط (بيتا وجاما)'},
     {type: 'mc', question: "شبكة بها 6 عقد و 7 وصلات (الحالة ب)، كم تبلغ قيمة مؤشر جاما (Gamma)؟", options: ["0.58", "1.16", "0.5", "1"], answer: 0, difficulty: 'medium', topic: 'مؤشرات الترابط (بيتا وجاما)'},
     {type: 'mc', question: "الأساس النظري البياني لتحليل الشبكات الطوبولوجية هو:", options: ["نظرية الجاذبية", "نظرية التفاعل", "نظرية الشبكات (Graph Theory)", "نظرية الكثافة"], answer: 2, difficulty: 'easy', topic: 'البنية الأساسية للشبكات'}
-];
-
+];// -----------------------------------------------------------------
+// --- (الموتور المُحسَّن - لا تعدل أي شيء هنا) ---
 // -----------------------------------------------------------------
-// ---!! (مهم) ده "الموتور" اللي كان ناقص !! ---
-// --- (انسخ كل شيء من هنا للنهاية) ---
-// -----------------------------------------------------------------
-
 const questionText = document.getElementById('question-text');
 const questionCounter = document.getElementById('question-counter');
 const progressBar = document.getElementById('progress-bar');
@@ -78,7 +74,9 @@ let currentQuestionIndex = 0;
 let correctAnswersCount = 0;
 let questionsShuffled = [];
 let incorrectAnswers = [];
+
 document.addEventListener('DOMContentLoaded', startQuiz);
+
 function startQuiz() {
     document.getElementById('quiz-title').innerText = QUIZ_TITLE;
     currentQuestionIndex = 0;
@@ -88,6 +86,7 @@ function startQuiz() {
     quizBody.style.display = 'block';
     quizFooter.style.display = 'block';
     resultsContainer.style.display = 'none';
+    
     const nextBtn = document.getElementById('next-btn');
     if (nextBtn) {
         const newNextBtn = nextBtn.cloneNode(true);
@@ -96,8 +95,17 @@ function startQuiz() {
         quizFooter.replaceChild(newNextBtn, nextBtn);
         newNextBtn.addEventListener('click', handleNextButtonClick);
     }
+
+    // --- (هذا هو الإصلاح لمشكلة ترتيب التحميل) ---
+    // ربط الأزرار بعد التأكد من جاهزية الصفحة
+    allOptionButtons.forEach(button => {
+        button.addEventListener('click', selectAnswer);
+    });
+    // -----------------------------------------
+
     loadQuestion();
 }
+
 function handleNextButtonClick() {
     if (currentQuestionIndex < questionsShuffled.length - 1) {
         currentQuestionIndex++;
@@ -106,6 +114,7 @@ function handleNextButtonClick() {
         showResults();
     }
 }
+
 function loadQuestion() {
     resetState(); 
     if (questionsShuffled.length === 0) {
@@ -136,6 +145,7 @@ function loadQuestion() {
     progressBar.style.width = `${progressPercent}%`;
     document.getElementById('next-btn').disabled = true;
 }
+
 function resetState() {
     feedback.innerText = '';
     tfOptionsContainer.style.display = 'none';
@@ -150,17 +160,22 @@ function resetState() {
         document.getElementById('next-btn').disabled = true;
     }
 }
+
 function selectAnswer(e) {
     const selectedButton = e.currentTarget;
     const currentQuestion = questionsShuffled[currentQuestionIndex];
     const correctAnswer = currentQuestion.answer;
     let selectedAnswer;
+
     if (currentQuestion.type === 'tf') {
-        selectedAnswer = (selectedButton.dataset.answer === 'true');
+        // --- (هذا هو الإصلاح لمشكلة dataset) ---
+        selectedAnswer = (selectedButton.dataset.answer.toLowerCase() === 'true');
     } else {
         selectedAnswer = parseInt(selectedButton.dataset.index);
     }
+
     allOptionButtons.forEach(button => button.disabled = true);
+
     if (selectedAnswer === correctAnswer) {
         selectedButton.classList.add('correct');
         feedback.innerText = "إجابة صحيحة!";
@@ -182,12 +197,16 @@ function selectAnswer(e) {
         correctButton.classList.add('correct'); 
         feedback.style.color = '#e74c3c';
     }
+    
     const nextButton = document.getElementById('next-btn');
-    nextButton.disabled = false;
-    if (currentQuestionIndex === questionsShuffled.length - 1) {
-        nextButton.innerText = 'عرض النتيجة';
+    if (nextButton) { // التأكد من وجود الزر
+        nextButton.disabled = false;
+        if (currentQuestionIndex === questionsShuffled.length - 1) {
+            nextButton.innerText = 'عرض النتيجة';
+        }
     }
 }
+
 function showResults() {
     const totalQuestions = questionsShuffled.length;
     const incorrectCount = incorrectAnswers.length;
@@ -291,6 +310,3 @@ function showResults() {
     resultsContainer.style.display = 'flex';
     document.getElementById('retry-btn').addEventListener('click', startQuiz);
 }
-allOptionButtons.forEach(button => {
-    button.addEventListener('click', selectAnswer);
-});
