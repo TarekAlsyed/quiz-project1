@@ -8,9 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <script>
-        // --- (جديد) سنستخدم الوقت الحالي كرقم نسخة متغيرة ---
-        // هذا الرقم العشوائي يجبر المتصفح على تحميل الملف كل مرة
-        const cacheBuster = new Date().getTime(); 
+        // --- (الاتفاق بتاعنا هنا) ---
+        // هذا الرقم الثابت هو سر "سرعة الطلقة"
+        // لما تعدل الأسئلة، لازم تغير الرقم ده (مثلاً لـ 'v=2')
+        const cacheVersion = 'v=1'; 
+        // -------------------------
         
         try {
             // 1. نقرأ اللينك
@@ -22,8 +24,8 @@
                 const preloadLink = document.createElement('link');
                 preloadLink.rel = 'preload';
                 preloadLink.as = 'script';
-                // 3. نربطها بالملف + الرقم العشوائي
-                preloadLink.href = `script_${quizName}.js?v=${cacheBuster}`; 
+                // 3. نربطها بالملف + الرقم الثابت
+                preloadLink.href = `script_${quizName}.js?${cacheVersion}`; 
                 document.head.appendChild(preloadLink);
             }
         } catch (e) {
@@ -84,8 +86,8 @@
             // 2. ننشئ "تاج" السكريبت
             const scriptTag = document.createElement('script');
             
-            // 3. نربطه بالملف + نفس الرقم العشوائي اللي فوق
-            scriptTag.src = `script_${quizName_main}.js?v=${cacheBuster}`; 
+            // 3. نربطه بالملف + نفس الرقم الثابت (اللي عرفناه فوق)
+            scriptTag.src = `script_${quizName_main}.js?${cacheVersion}`; 
             
             // 4. نضيفه للصفحة عشان يشتغل
             document.body.appendChild(scriptTag);
