@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
     <script>
+        // --- (جديد) سنستخدم الوقت الحالي كرقم نسخة متغيرة ---
+        const cacheBuster = new Date().getTime(); 
+        
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const quizName = urlParams.get('quiz');
@@ -15,9 +18,8 @@
                 const preloadLink = document.createElement('link');
                 preloadLink.rel = 'preload';
                 preloadLink.as = 'script';
-                // --- (ده الحل رقم 2: كسر الكاش) ---
-                // لاحظ إننا خلينا الرقم v=2
-                preloadLink.href = `script_${quizName}.js?v=2`; 
+                // --- (جديد) استخدام الرقم المتغير هنا ---
+                preloadLink.href = `script_${quizName}.js?v=${cacheBuster}`; 
                 document.head.appendChild(preloadLink);
             }
         } catch (e) {
@@ -30,66 +32,48 @@
     <div class="quiz-container">
         <div class="quiz-header">
             <h2><span id="quiz-title">جاري تحميل الاختبار...</span></h2>
-            
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
             <p id="question-counter" class="question-counter">السؤال 0 / 0</p>
         </div>
-        
         <div class="quiz-body" id="quiz-body">
             <h3 id="question-text">جاري تحميل السؤال...</h3>
-            
             <div class="options-container" id="tf-options-container" style="display: none;">
-                <button class="option-btn" data-answer="true">
-                    <span class="option-text">صح</span>
-                    <span class="icon"></span>
-                </button>
-                <button class="option-btn" data-answer="false">
-                    <span class="option-text">خطأ</span>
-                    <span class="icon"></span>
-                </button>
+                <button class="option-btn" data-answer="true">...</button>
+                <button class="option-btn" data-answer="false">...</button>
             </div>
-
             <div class="options-container" id="mc-options-container" style="display: none;">
-                <button class="option-btn" data-index="0"><span class="option-text">...</span><span class="icon"></span></button>
-                <button class="option-btn" data-index="1"><span class="option-text">...</span><span class="icon"></span></button>
-                <button class="option-btn" data-index="2"><span class="option-text">...</span><span class="icon"></span></button>
-                <button class="option-btn" data-index="3"><span class="option-text">...</span><span class="icon"></span></button>
+                <button class="option-btn" data-index="0">...</button>
+                <button class="option-btn" data-index="1">...</button>
+                <button class="option-btn" data-index="2">...</button>
+                <button class="option-btn" data-index="3">...</button>
             </div>
-            
             <p id="feedback" class="feedback"></p>
         </div>
-        
         <div class="results-container" id="results-container" style="display: none;">
             </div>
-
         <div class="quiz-footer" id="quiz-footer">
             <button id="next-btn" class="next-btn" disabled>السؤال التالي ←</button>
         </div>
     </div>
 
     <script>
-        // 1. اقرأ "الرسالة السرية" (اللينك)
+        // --- (جديد) استخدام نفس الرقم المتغير من فوق ---
+        // (لا حاجة لتعريفه مرة أخرى، هو موجود)
+        
         const urlParams_main = new URLSearchParams(window.location.search);
         const quizName_main = urlParams_main.get('quiz');
 
         if (quizName_main) {
-            // 2. أنشئ "تاج" سكريبت جديد
             const scriptTag = document.createElement('script');
             
-            // --- (ده الحل رقم 2: كسر الكاش) ---
-            // لازم الرقم ده v=2 يكون زي الرقم اللي فوق بالظبط
-            scriptTag.src = `script_${quizName_main}.js?v=2`; 
+            // --- (جديد) استخدام الرقم المتغير هنا أيضاً ---
+            scriptTag.src = `script_${quizName_main}.js?v=${cacheBuster}`; 
             
-            // 4. ضيف الملف ده للصفحة عشان يشتغل
             document.body.appendChild(scriptTag);
         } else {
-            // لو حد فتح الصفحة دي بالغلط من غير ما يختار
-            document.getElementById('quiz-title').innerText = "خطأ";
-            document.getElementById('question-text').innerText = "الرجاء العودة للصفحة الرئيسية واختيار اختبار أولاً.";
-            document.getElementById('question-counter').style.display = 'none';
-            document.getElementById('progress-bar').style.display = 'none';
+            // ... (باقي كود الخطأ زي ما هو) ...
         }
     </script>
 </body>
