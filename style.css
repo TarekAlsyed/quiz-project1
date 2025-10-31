@@ -1,7 +1,6 @@
-/* ضبط الخط والنمط العام */
 body {
     font-family: 'Cairo', sans-serif;
-    background-color: #1a1a2e; /* لون الخلفية الغامق */
+    background-color: #1a1a2e;
     color: #e0e0e0;
     display: flex;
     justify-content: center;
@@ -10,10 +9,8 @@ body {
     margin: 0;
     direction: rtl;
 }
-
-/* حاوية الاختبار الرئيسية */
 .quiz-container {
-    background-color: #2a2a4e; /* لون الحاوية الأغمق قليلاً */
+    background-color: #2a2a4e;
     border-radius: 15px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     width: 90%;
@@ -21,19 +18,15 @@ body {
     overflow: hidden;
     border: 1px solid #3a3a5e;
 }
-
 .quiz-header {
     padding: 2rem;
-    background-color: #2f2f58; /* لون رأس الاختبار */
+    background-color: #2f2f58;
 }
-
 .quiz-header h2 {
     margin: 0;
     text-align: center;
     font-weight: 700;
 }
-
-/* شريط التقدم */
 .progress-container {
     width: 100%;
     background-color: #1a1a2e;
@@ -41,43 +34,35 @@ body {
     height: 10px;
     margin-top: 1rem;
 }
-
 .progress-bar {
     height: 100%;
-    width: 0%; /* سيتغير عبر جافاسكريبت */
+    width: 0%;
     background: linear-gradient(90deg, #4e54c8, #8f94fb);
     border-radius: 5px;
     transition: width 0.4s ease;
 }
-
 .question-counter {
     text-align: center;
     margin-top: 0.5rem;
     font-size: 0.9rem;
     color: #b0b0d0;
 }
-
-/* جسم الاختبار (السؤال والأجوبة) */
 .quiz-body {
     padding: 2.5rem;
 }
-
 #question-text {
     font-size: 1.6rem;
     font-weight: 600;
     text-align: center;
     line-height: 1.6;
     margin-bottom: 2.5rem;
-    min-height: 100px; /* لضمان ثبات الارتفاع */
+    min-height: 100px;
 }
-
-/* الأزرار (صح / خطأ) */
 .options-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
-
 .option-btn {
     width: 100%;
     background-color: #3a3a5e;
@@ -92,63 +77,48 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    text-align: right; /* لضمان محاذاة النص لليمين */
+    text-align: right;
 }
-
 .option-btn:not(:disabled):hover {
     background-color: #4a4a6e;
     border-color: #7a7a9e;
 }
-
 .option-btn:disabled {
     cursor: not-allowed;
     opacity: 0.7;
 }
-
-/* الأيقونات (صح / خطأ) */
 .option-btn .icon {
     font-size: 1.5rem;
     font-weight: bold;
 }
-
-/* حالة الإجابة الصحيحة (الأخضر) */
 .option-btn.correct {
-    background-color: rgba(46, 204, 113, 0.15); /* أخضر شفاف */
-    border-color: #2ecc71; /* أخضر */
+    background-color: rgba(46, 204, 113, 0.15);
+    border-color: #2ecc71;
     color: #2ecc71;
 }
-
 .option-btn.correct .icon::before {
     content: '✓';
 }
-
-/* حالة الإجابة الخاطئة (الأحمر) */
 .option-btn.incorrect {
-    background-color: rgba(231, 76, 60, 0.15); /* أحمر شفاف */
-    border-color: #e74c3c; /* أحمر */
+    background-color: rgba(231, 76, 60, 0.15);
+    border-color: #e74c3c;
     color: #e74c3c;
 }
-
 .option-btn.incorrect .icon::before {
     content: '✗';
 }
-
-/* رسالة التغذية الراجعة */
 .feedback {
     text-align: center;
     font-size: 1.1rem;
     font-weight: 600;
     margin-top: 1.5rem;
-    height: 30px; /* لضمان عدم تحرك الزر التالي */
+    height: 30px;
 }
-
-/* ذيل الاختبار (زر التالي) */
 .quiz-footer {
     padding: 2rem;
     background-color: #2f2f58;
-    text-align: left; /* ليتجه الزر لليسار */
+    text-align: left;
 }
-
 .next-btn {
     background: linear-gradient(90deg, #4e54c8, #8f94fb);
     border: none;
@@ -161,21 +131,15 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
 }
-
 .next-btn:disabled {
     background: #5a5a7e;
     cursor: not-allowed;
     opacity: 0.5;
 }
-
 .next-btn:not(:disabled):hover {
     box-shadow: 0 5px 15px rgba(143, 148, 251, 0.3);
     transform: translateY(-2px);
 }
-
-/* --- أكواد شاشة النتائج والتحليل --- */
-
-/* حاوية النتائج */
 .results-container {
     display: flex;
     flex-direction: column;
@@ -184,7 +148,6 @@ body {
     padding: 2.5rem 2rem;
     text-align: center;
 }
-
 .results-container h3 { 
     font-size: 1.8rem; 
     font-weight: 700; 
@@ -237,16 +200,12 @@ body {
 .level-good { --percentage-color: #3498db; color: #3498db; }
 .level-pass { --percentage-color: #f39c12; color: #f39c12; }
 .level-fail { --percentage-color: #e74c3c; color: #e74c3c; }
-
-/* حاجز الخط الفاصل */
 .results-divider {
     width: 80%;
     height: 1px;
     background-color: #3a3a5e;
     margin: 2rem 0;
 }
-
-/* شبكة ملخص الأداء (صح / غلط) */
 .results-summary-grid {
     display: flex;
     justify-content: space-around;
@@ -254,7 +213,6 @@ body {
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
-
 .summary-box {
     background-color: #2f2f58;
     padding: 1rem;
@@ -262,13 +220,11 @@ body {
     width: 45%;
     border: 1px solid #3a3a5e;
 }
-
 .summary-box-label {
     font-size: 1rem;
     color: #b0b0d0;
     margin: 0 0 0.5rem 0;
 }
-
 .summary-box-value {
     font-size: 2rem;
     font-weight: 700;
@@ -280,14 +236,11 @@ body {
 .summary-box-value.incorrect {
     color: #e74c3c;
 }
-
-/* قسم التحليل (الصعوبة والنصيحة) */
 .analysis-section {
     width: 100%;
-    text-align: right; /* محاذاة لليمين */
+    text-align: right;
     margin-bottom: 1.5rem;
 }
-
 .analysis-section h4 {
     font-size: 1.2rem;
     color: #e0e0e0;
@@ -295,8 +248,6 @@ body {
     border-bottom: 2px solid #4e54c8;
     padding-bottom: 0.5rem;
 }
-
-/* تحليل الصعوبة */
 .difficulty-analysis ul {
     list-style-type: none;
     padding: 0;
@@ -309,12 +260,10 @@ body {
 }
 .difficulty-analysis li span {
     font-weight: 700;
-    color: #e74c3c; /* لون الأخطاء */
+    color: #e74c3c;
 }
-
-/* صندوق النصيحة */
 .advice-box {
-    background-color: rgba(243, 156, 18, 0.1); /* برتقالي شفاف */
+    background-color: rgba(243, 156, 18, 0.1);
     border: 1px solid #f39c12;
     padding: 1rem;
     border-radius: 8px;
@@ -325,21 +274,17 @@ body {
 .advice-box strong {
     color: white;
 }
-
-/* قايمة الأخطاء المنسدلة */
 .error-list {
     width: 100%;
     text-align: right;
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
 }
-
 .error-list details {
     border: 1px solid #3a3a5e;
     border-radius: 8px;
     overflow: hidden;
 }
-
 .error-list summary {
     font-size: 1.1rem;
     font-weight: 600;
@@ -347,14 +292,12 @@ body {
     cursor: pointer;
     background-color: #2f2f58;
 }
-
 .error-list-content {
     background-color: #2a2a4e;
     padding: 1rem;
 }
-
 .error-list ul {
-    padding-right: 20px; /* مسافة للقايمة */
+    padding-right: 20px;
     margin: 0;
 }
 .error-list li {
@@ -363,17 +306,12 @@ body {
     margin-bottom: 0.75rem;
     line-height: 1.5;
 }
-
-/* --- (جديد) تصميم أزرار الصفحة الرئيسية --- */
-
 .main-menu-title {
     font-size: 1.8rem;
     text-align: center;
     margin-bottom: 2rem;
     color: #e0e0e0;
 }
-
-/* أزرار القائمة الرئيسية */
 .menu-btn {
     background-color: #3a3a5e;
     border: 2px solid #5a5a7e;
@@ -385,12 +323,11 @@ body {
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-decoration: none; /* لإزالة خط اللينك */
-    display: block; /* ليأخذ السطر كاملاً */
+    text-decoration: none;
+    display: block;
     text-align: center;
     margin-bottom: 1rem;
 }
-
 .menu-btn:hover {
     background-color: #4a4a6e;
     border-color: #7a7a9e;

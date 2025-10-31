@@ -1,13 +1,5 @@
-// ---!! (جديد) هنا تضع عنوان الاختبار !! ---
 const QUIZ_TITLE = "كتاب مساقط الخرائط";
-// ----------------------------------------
-
-// ---!! (فارغ) سيتم إضافة الأسئلة هنا مستقبلاً !! ---
 const questions = [];
-// ----------------------------------------
-
-// --- (هذا هو الكود الكامل لتشغيل الاختبار) ---
-// --- (لا تحتاج لتعديل أي شيء هنا) ---
 const questionText = document.getElementById('question-text');
 const questionCounter = document.getElementById('question-counter');
 const progressBar = document.getElementById('progress-bar');
@@ -59,7 +51,7 @@ function loadQuestion() {
         document.getElementById('question-text').innerText = "هذا الاختبار غير متاح حالياً. سيتم إضافة الأسئلة قريباً.";
         quizFooter.style.display = 'none';
         questionCounter.innerText = "قريباً";
-        progressBar.style.display = 'none'; // إخفاء شريط التقدم
+        progressBar.style.display = 'none';
         return;
     }
     const currentQuestion = questionsShuffled[currentQuestionIndex];

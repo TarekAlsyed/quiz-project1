@@ -6,26 +6,16 @@
     <title>اختبار تفاعلي</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-
     <script>
-        // --- (الاتفاق بتاعنا هنا) ---
-        // هذا الرقم الثابت هو سر "سرعة الطلقة"
-        // لما تعدل الأسئلة، لازم تغير الرقم ده (مثلاً لـ 'v=2')
-        const cacheVersion = 'v=1'; 
-        // -------------------------
-        
+        const cacheBuster = new Date().getTime(); 
         try {
-            // 1. نقرأ اللينك
             const urlParams = new URLSearchParams(window.location.search);
             const quizName = urlParams.get('quiz');
-            
             if (quizName) {
-                // 2. نجهز "لمبة تحميل مسبق"
                 const preloadLink = document.createElement('link');
                 preloadLink.rel = 'preload';
                 preloadLink.as = 'script';
-                // 3. نربطها بالملف + الرقم الثابت
-                preloadLink.href = `script_${quizName}.js?${cacheVersion}`; 
+                preloadLink.href = `script_${quizName}.js?v=${cacheBuster}`; 
                 document.head.appendChild(preloadLink);
             }
         } catch (e) {
@@ -34,20 +24,16 @@
     </script>
 </head>
 <body>
-
     <div class="quiz-container">
         <div class="quiz-header">
             <h2><span id="quiz-title">جاري تحميل الاختبار...</span></h2>
-            
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
             <p id="question-counter" class="question-counter">السؤال 0 / 0</p>
         </div>
-        
         <div class="quiz-body" id="quiz-body">
             <h3 id="question-text">جاري تحميل السؤال...</h3>
-            
             <div class="options-container" id="tf-options-container" style="display: none;">
                 <button class="option-btn" data-answer="true">
                     <span class="option-text">صح</span>
@@ -58,41 +44,28 @@
                     <span class="icon"></span>
                 </button>
             </div>
-
             <div class="options-container" id="mc-options-container" style="display: none;">
                 <button class="option-btn" data-index="0"><span class="option-text">...</span><span class="icon"></span></button>
                 <button class="option-btn" data-index="1"><span class="option-text">...</span><span class="icon"></span></button>
                 <button class="option-btn" data-index="2"><span class="option-text">...</span><span class="icon"></span></button>
                 <button class="option-btn" data-index="3"><span class="option-text">...</span><span class="icon"></span></button>
             </div>
-            
             <p id="feedback" class="feedback"></p>
         </div>
-        
         <div class="results-container" id="results-container" style="display: none;">
-            </div>
-
+        </div>
         <div class="quiz-footer" id="quiz-footer">
             <button id="next-btn" class="next-btn" disabled>السؤال التالي ←</button>
         </div>
     </div>
-
     <script>
-        // 1. نقرأ اللينك مرة أخرى
         const urlParams_main = new URLSearchParams(window.location.search);
         const quizName_main = urlParams_main.get('quiz');
-
         if (quizName_main) {
-            // 2. ننشئ "تاج" السكريبت
             const scriptTag = document.createElement('script');
-            
-            // 3. نربطه بالملف + نفس الرقم الثابت (اللي عرفناه فوق)
-            scriptTag.src = `script_${quizName_main}.js?${cacheVersion}`; 
-            
-            // 4. نضيفه للصفحة عشان يشتغل
+            scriptTag.src = `script_${quizName_main}.js?v=${cacheBuster}`; 
             document.body.appendChild(scriptTag);
         } else {
-            // لو حد فتح الصفحة دي بالغلط من غير ما يختار
             document.getElementById('quiz-title').innerText = "خطأ";
             document.getElementById('question-text').innerText = "الرجاء العودة للصفحة الرئيسية واختيار اختبار أولاً.";
             document.getElementById('question-counter').style.display = 'none';
