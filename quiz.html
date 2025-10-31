@@ -6,6 +6,24 @@
     <title>اختبار تفاعلي</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizName = urlParams.get('quiz');
+            if (quizName) {
+                const preloadLink = document.createElement('link');
+                preloadLink.rel = 'preload';
+                preloadLink.as = 'script';
+                // --- (ده الحل رقم 2: كسر الكاش) ---
+                // لاحظ إننا خلينا الرقم v=2
+                preloadLink.href = `script_${quizName}.js?v=2`; 
+                document.head.appendChild(preloadLink);
+            }
+        } catch (e) {
+            console.error("Preload failed", e);
+        }
+    </script>
 </head>
 <body>
 
@@ -53,16 +71,16 @@
 
     <script>
         // 1. اقرأ "الرسالة السرية" (اللينك)
-        const urlParams = new URLSearchParams(window.location.search);
-        const quizName = urlParams.get('quiz'); // "gis_networks" or "transport" etc.
+        const urlParams_main = new URLSearchParams(window.location.search);
+        const quizName_main = urlParams_main.get('quiz');
 
-        if (quizName) {
+        if (quizName_main) {
             // 2. أنشئ "تاج" سكريبت جديد
             const scriptTag = document.createElement('script');
             
-            // 3. حط اسم الملف الصح بناءً على اللينك
-            // (v=1 دي عشان نكسر الكاش زي ما اتفقنا)
-            scriptTag.src = `script_${quizName}.js?v=1`; 
+            // --- (ده الحل رقم 2: كسر الكاش) ---
+            // لازم الرقم ده v=2 يكون زي الرقم اللي فوق بالظبط
+            scriptTag.src = `script_${quizName_main}.js?v=2`; 
             
             // 4. ضيف الملف ده للصفحة عشان يشتغل
             document.body.appendChild(scriptTag);
