@@ -1,9 +1,4 @@
-// ---!! (جديد) هنا تضع عنوان الاختبار !! ---
 const QUIZ_TITLE = "تطبيقات نظم المعلومات الجغرافية فى الشبكات";
-// ----------------------------------------
-
-
-// ---!! هنا الـ 50 سؤال بالبيانات الجديدة !! ---
 const questions = [
     {type: 'tf', question: "المسارات (Paths) هي أشكال من البنية الشبكية لا يمكن العودة فيها لنقطة البداية.", answer: true, difficulty: 'easy', topic: 'البنية الأساسية للشبكات'},
     {type: 'tf', question: "الدارات (Circuits) هي نفسها الشجرات (Trees) لكنها أكبر حجماً.", answer: false, difficulty: 'easy', topic: 'البنية الأساسية للشبكات'},
@@ -55,9 +50,13 @@ const questions = [
     {type: 'mc', question: "شبكة بها 6 عقد و 7 وصلات (الحالة ب في الجدول)، كم تبلغ قيمة مؤشر بيتا (Beta)؟", options: ["1", "1.16", "0.85", "7"], answer: 1, difficulty: 'medium', topic: 'مؤشرات الترابط (بيتا وجاما)'},
     {type: 'mc', question: "شبكة بها 6 عقد و 7 وصلات (الحالة ب)، كم تبلغ قيمة مؤشر جاما (Gamma)؟", options: ["0.58", "1.16", "0.5", "1"], answer: 0, difficulty: 'medium', topic: 'مؤشرات الترابط (بيتا وجاما)'},
     {type: 'mc', question: "الأساس النظري البياني لتحليل الشبكات الطوبولوجية هو:", options: ["نظرية الجاذبية", "نظرية التفاعل", "نظرية الشبكات (Graph Theory)", "نظرية الكثافة"], answer: 2, difficulty: 'easy', topic: 'البنية الأساسية للشبكات'}
-];// -----------------------------------------------------------------
-// --- (الموتور المُحسَّن - لا تعدل أي شيء هنا) ---
+];
+
 // -----------------------------------------------------------------
+// ---!! (مهم) ده "الموتور" اللي كان ناقص !! ---
+// --- (انسخ كل شيء من هنا للنهاية) ---
+// -----------------------------------------------------------------
+
 const questionText = document.getElementById('question-text');
 const questionCounter = document.getElementById('question-counter');
 const progressBar = document.getElementById('progress-bar');
@@ -132,7 +131,7 @@ function loadQuestion() {
     } else if (currentQuestion.type === 'mc') {
         mcOptionsContainer.style.display = 'flex';
         mcOptionButtons.forEach((button, index) => {
-            if (currentQuestion.options[index]) {
+            if (currentQuestion.options && currentQuestion.options[index]) {
                 button.querySelector('.option-text').innerText = currentQuestion.options[index];
                 button.style.display = 'flex';
             } else {
