@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تفاعلي</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h2><span id="quiz-title">جاري تحميل الاختبار...</span></h2>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p id="question-counter" class="question-counter">السؤال 0 / 0</p>
+        </div>
+        
+        <div class="quiz-body" id="quiz-body">
+            <h3 id="question-text">جاري تحميل السؤال...</h3>
+            
+            <div class="options-container" id="tf-options-container" style="display: none;">
+                <button class="option-btn" data-answer="true">
+                    <span class="option-text">صح</span>
+                    <span class="icon"></span>
+                </button>
+                <button class="option-btn" data-answer="false">
+                    <span class="option-text">خطأ</span>
+                    <span class="icon"></span>
+                </button>
+            </div>
+
+            <div class="options-container" id="mc-options-container" style="display: none;">
+                <button class="option-btn" data-index="0"><span class="option-text">...</span><span class="icon"></span></button>
+                <button class="option-btn" data-index="1"><span class="option-text">...</span><span class="icon"></span></button>
+                <button class="option-btn" data-index="2"><span class="option-text">...</span><span class="icon"></span></button>
+                <button class="option-btn" data-index="3"><span class="option-text">...</span><span class="icon"></span></button>
+            </div>
+            
+            <p id="feedback" class="feedback"></p>
+        </div>
+        
+        <div class="results-container" id="results-container" style="display: none;">
+            </div>
+
+        <div class="quiz-footer" id="quiz-footer">
+            <button id="next-btn" class="next-btn" disabled>السؤال التالي ←</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. اقرأ "الرسالة السرية" (اللينك)
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizName = urlParams.get('quiz'); // "gis_networks" or "transport" etc.
+
+        if (quizName) {
+            // 2. أنشئ "تاج" سكريبت جديد
+            const scriptTag = document.createElement('script');
+            
+            // 3. حط اسم الملف الصح بناءً على اللينك
+            // (v=1 دي عشان نكسر الكاش زي ما اتفقنا)
+            scriptTag.src = `script_${quizName}.js?v=1`; 
+            
+            // 4. ضيف الملف ده للصفحة عشان يشتغل
+            document.body.appendChild(scriptTag);
+        } else {
+            // لو حد فتح الصفحة دي بالغلط من غير ما يختار
+            document.getElementById('quiz-title').innerText = "خطأ";
+            document.getElementById('question-text').innerText = "الرجاء العودة للصفحة الرئيسية واختيار اختبار أولاً.";
+            document.getElementById('question-counter').style.display = 'none';
+            document.getElementById('progress-bar').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
