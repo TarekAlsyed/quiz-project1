@@ -51,6 +51,11 @@ const questions = [
     {type: 'mc', question: "عندما تفاضل بين مد طريق عبر سهل طيني (تكاليف صيانة عالية) أو عبر جبل صخري (تكاليف إنشاء عالية)، فأنت تدرس تأثير:", options: ["الموقع النسبي", "البنية الجيولوجية والتضاريس", "الآثار الاجتماعية", "نظم المعلومات الجغرافية"], answer: 1, difficulty: 'medium', topic: 'العوامل الجغرافية (شامل)'},
     {type: 'mc', question: "أي من التالي يمثل أفضل وصف لـ 'جغرافية النقل'؟", options: ["دراسة تاريخ تطور وسائل النقل.", "دراسة هندسة محركات السيارات والطائرات.", "دراسة العلاقة المتبادلة بين شبكات النقل والبيئة الجغرافية (الطبيعية والبشري).", "دراسة قوانين المرور الدولية."], answer: 2, difficulty: 'easy', topic: 'ماهية جغرافية النقل'}
 ];
+
+// -----------------------------------------------------------------
+// --- (الموتور الجديد بـ "الإصلاح النهائي") ---
+// -----------------------------------------------------------------
+
 const questionText = document.getElementById('question-text');
 const questionCounter = document.getElementById('question-counter');
 const progressBar = document.getElementById('progress-bar');
@@ -67,7 +72,12 @@ let currentQuestionIndex = 0;
 let correctAnswersCount = 0;
 let questionsShuffled = [];
 let incorrectAnswers = [];
-document.addEventListener('DOMContentLoaded', startQuiz);
+
+// --- (الإصلاح) ---
+// متستناش أي جرس، إحنا خلاص حملنا. ابدأ الموتور فوراً
+startQuiz();
+// ---------------
+
 function startQuiz() {
     document.getElementById('quiz-title').innerText = QUIZ_TITLE;
     currentQuestionIndex = 0;
@@ -77,6 +87,7 @@ function startQuiz() {
     quizBody.style.display = 'block';
     quizFooter.style.display = 'block';
     resultsContainer.style.display = 'none';
+    
     const nextBtn = document.getElementById('next-btn');
     if (nextBtn) {
         const newNextBtn = nextBtn.cloneNode(true);
@@ -85,8 +96,15 @@ function startQuiz() {
         quizFooter.replaceChild(newNextBtn, nextBtn);
         newNextBtn.addEventListener('click', handleNextButtonClick);
     }
+
+    // ربط الأزرار بعد التأكد من جاهزية الصفحة
+    allOptionButtons.forEach(button => {
+        button.addEventListener('click', selectAnswer);
+    });
+
     loadQuestion();
 }
+
 function handleNextButtonClick() {
     if (currentQuestionIndex < questionsShuffled.length - 1) {
         currentQuestionIndex++;
@@ -95,6 +113,7 @@ function handleNextButtonClick() {
         showResults();
     }
 }
+
 function loadQuestion() {
     resetState(); 
     if (questionsShuffled.length === 0) {
@@ -112,7 +131,7 @@ function loadQuestion() {
     } else if (currentQuestion.type === 'mc') {
         mcOptionsContainer.style.display = 'flex';
         mcOptionButtons.forEach((button, index) => {
-            if (currentQuestion.options[index]) {
+            if (currentQuestion.options && currentQuestion.options[index]) {
                 button.querySelector('.option-text').innerText = currentQuestion.options[index];
                 button.style.display = 'flex';
             } else {
@@ -125,6 +144,7 @@ function loadQuestion() {
     progressBar.style.width = `${progressPercent}%`;
     document.getElementById('next-btn').disabled = true;
 }
+
 function resetState() {
     feedback.innerText = '';
     tfOptionsContainer.style.display = 'none';
@@ -139,17 +159,21 @@ function resetState() {
         document.getElementById('next-btn').disabled = true;
     }
 }
+
 function selectAnswer(e) {
     const selectedButton = e.currentTarget;
     const currentQuestion = questionsShuffled[currentQuestionIndex];
     const correctAnswer = currentQuestion.answer;
     let selectedAnswer;
+
     if (currentQuestion.type === 'tf') {
-        selectedAnswer = (selectedButton.dataset.answer === 'true');
+        selectedAnswer = (selectedButton.dataset.answer.toLowerCase() === 'true');
     } else {
         selectedAnswer = parseInt(selectedButton.dataset.index);
     }
+
     allOptionButtons.forEach(button => button.disabled = true);
+
     if (selectedAnswer === correctAnswer) {
         selectedButton.classList.add('correct');
         feedback.innerText = "إجابة صحيحة!";
@@ -171,12 +195,16 @@ function selectAnswer(e) {
         correctButton.classList.add('correct'); 
         feedback.style.color = '#e74c3c';
     }
+    
     const nextButton = document.getElementById('next-btn');
-    nextButton.disabled = false;
-    if (currentQuestionIndex === questionsShuffled.length - 1) {
-        nextButton.innerText = 'عرض النتيجة';
+    if (nextButton) {
+        nextButton.disabled = false;
+        if (currentQuestionIndex === questionsShuffled.length - 1) {
+            nextButton.innerText = 'عرض النتيجة';
+        }
     }
 }
+
 function showResults() {
     const totalQuestions = questionsShuffled.length;
     const incorrectCount = incorrectAnswers.length;
@@ -280,6 +308,3 @@ function showResults() {
     resultsContainer.style.display = 'flex';
     document.getElementById('retry-btn').addEventListener('click', startQuiz);
 }
-allOptionButtons.forEach(button => {
-    button.addEventListener('click', selectAnswer);
-});
