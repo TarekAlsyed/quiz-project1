@@ -1,4 +1,4 @@
-const QUIZ_TITLE = "جغرافية النقل والمواصلات";
+const QUIZ_TITLE = "جغرافية النقل طارق والمواصلات";
 const questions = [
     {type: 'tf', question: "يُعتبر النقل والاتصالات مؤشراً هاماً في عملية البناء الاقتصادي والاجتماعي للدول.", answer: true, difficulty: 'easy', topic: 'مقدمة في النقل'},
     {type: 'tf', question: "لا يوجد فرق بين مفهوم النقل (Transport) ومفهوم جغرافية النقل.", answer: false, difficulty: 'easy', topic: 'مفاهيم أساسية'},
@@ -308,3 +308,4 @@ function showResults() {
     resultsContainer.style.display = 'flex';
     document.getElementById('retry-btn').addEventListener('click', startQuiz);
 }
+
