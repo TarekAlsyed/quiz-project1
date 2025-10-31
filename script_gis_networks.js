@@ -53,8 +53,7 @@ const questions = [
 ];
 
 // -----------------------------------------------------------------
-// ---!! (مهم) ده "الموتور" اللي كان ناقص !! ---
-// --- (انسخ كل شيء من هنا للنهاية) ---
+// --- (الموتور الجديد بـ "الإصلاح النهائي") ---
 // -----------------------------------------------------------------
 
 const questionText = document.getElementById('question-text');
@@ -74,7 +73,10 @@ let correctAnswersCount = 0;
 let questionsShuffled = [];
 let incorrectAnswers = [];
 
-document.addEventListener('DOMContentLoaded', startQuiz);
+// --- (الإصلاح) ---
+// متستناش أي جرس، إحنا خلاص حملنا. ابدأ الموتور فوراً
+startQuiz();
+// ---------------
 
 function startQuiz() {
     document.getElementById('quiz-title').innerText = QUIZ_TITLE;
@@ -95,12 +97,10 @@ function startQuiz() {
         newNextBtn.addEventListener('click', handleNextButtonClick);
     }
 
-    // --- (هذا هو الإصلاح لمشكلة ترتيب التحميل) ---
     // ربط الأزرار بعد التأكد من جاهزية الصفحة
     allOptionButtons.forEach(button => {
         button.addEventListener('click', selectAnswer);
     });
-    // -----------------------------------------
 
     loadQuestion();
 }
@@ -167,7 +167,6 @@ function selectAnswer(e) {
     let selectedAnswer;
 
     if (currentQuestion.type === 'tf') {
-        // --- (هذا هو الإصلاح لمشكلة dataset) ---
         selectedAnswer = (selectedButton.dataset.answer.toLowerCase() === 'true');
     } else {
         selectedAnswer = parseInt(selectedButton.dataset.index);
@@ -198,7 +197,7 @@ function selectAnswer(e) {
     }
     
     const nextButton = document.getElementById('next-btn');
-    if (nextButton) { // التأكد من وجود الزر
+    if (nextButton) {
         nextButton.disabled = false;
         if (currentQuestionIndex === questionsShuffled.length - 1) {
             nextButton.innerText = 'عرض النتيجة';
