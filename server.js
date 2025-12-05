@@ -57,7 +57,7 @@ app.get('/admin', (req, res) => {
     <html dir="rtl" lang="ar">
     <head>
         <meta charset="UTF-8">
-        <title>لوحة المراقب 👮‍♂️</title>
+        <title>لوحة المراقب 👮‍♂️ - quiz-project1</title>
         <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
             h1 { color: #1f2937; border-bottom: 3px solid #10b981; padding-bottom: 10px; display: inline-block; }
