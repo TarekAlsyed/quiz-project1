@@ -15,84 +15,100 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-// جعل مجلد التحميلات عاماً للوصول إليه
+// جعل مجلد التحميلات عاماً
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// إنشاء المجلدات الضرورية
+// إنشاء المجلدات
 const dirs = ['./uploads/videos', './uploads/photos', './uploads/logs'];
 dirs.forEach(dir => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// إعداد تخزين الصور (للمخالفات)
+// إعداد تخزين الصور
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, './uploads/photos'),
     filename: (req, file, cb) => cb(null, `${req.body.studentId}_${Date.now()}.jpg`)
 });
 const upload = multer({ storage: storage });
 
-// === 🎥 متغيرات البث ===
-const fileStreams = {}; // لتخزين قنوات الكتابة المفتوحة لكل طالب
+// === 🎥 متغيرات النظام ===
+const fileStreams = {}; // لتخزين ملفات الفيديو المفتوحة
+const activeStudents = {}; // 🔥 قائمة الطلاب المتصلين حالياً (الاسم + الصورة)
 
 // === 🔗 الروابط ===
 
-// 1. صفحة الامتحان
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 2. صفحة غرفة العمليات (يتم إنشاؤها ديناميكياً)
+// صفحة غرفة العمليات (يتم إنشاؤها ديناميكياً)
 app.get('/ops', (req, res) => {
     res.send(opsRoomHTML);
 });
 
-// === 🔥 نظام Socket.io (قلب البث المباشر) ===
+// === 🔥 نظام Socket.io ===
 io.on('connection', (socket) => {
     
-    // --> دخول المراقب لغرفة العمليات
+    // --> 1. دخول المراقب لغرفة العمليات
     socket.on('join-ops', () => {
         socket.join('ops-room');
         console.log('👮‍♂️ دخل مراقب إلى غرفة العمليات');
+        
+        // 🔥 التعديل الجديد: إرسال كل الطلاب الموجودين حالياً للمراقب الجديد
+        const currentIds = Object.keys(activeStudents);
+        if(currentIds.length > 0) {
+            console.log(`📡 إرسال بيانات ${currentIds.length} طالب للمراقب الجديد`);
+            currentIds.forEach(socketId => {
+                // نرسل للمراقب بيانات الطالب كأنه دخل للتو
+                socket.emit('new-student', { 
+                    id: activeStudents[socketId].name, 
+                    socketId: socketId 
+                });
+            });
+        }
     });
 
-    // --> 1. بدء البث من الطالب
+    // --> 2. بدء البث من الطالب
     socket.on('start-stream', (studentId) => {
         console.log(`🔴 بدأ البث: ${studentId}`);
-        const filePath = `./uploads/videos/${studentId}.webm`;
         
+        // تسجيل الطالب في القائمة الحية
+        activeStudents[socket.id] = { name: studentId, socketId: socket.id };
+
+        const filePath = `./uploads/videos/${studentId}.webm`;
         // فتح ملف للكتابة المستمرة (Append Mode)
-        // هذا يسمح بملفات ضخمة (10 جيجا+) دون استهلاك الرام
         fileStreams[socket.id] = fs.createWriteStream(filePath, { flags: 'a' });
         
         // إبلاغ غرفة العمليات بطالب جديد
         io.to('ops-room').emit('new-student', { id: studentId, socketId: socket.id });
     });
 
-    // --> 2. استقبال بيانات الفيديو (للحفظ)
+    // --> 3. استقبال بيانات الفيديو (للحفظ)
     socket.on('video-chunk', (data) => {
         if (fileStreams[socket.id]) {
-            // كتابة البيانات فوراً في القرص الصلب
             fileStreams[socket.id].write(data);
         }
     });
 
-    // --> 3. استقبال "فريم" مباشر (للعرض في الغرفة فقط)
+    // --> 4. استقبال "فريم" مباشر (للعرض)
     socket.on('live-frame', (imgData) => {
         // إعادة توجيه الصورة فوراً للمراقبين
         io.to('ops-room').emit('update-frame', { socketId: socket.id, image: imgData });
     });
 
-    // --> 4. استقبال مخالفة
+    // --> 5. استقبال مخالفة
     socket.on('violation-alert', (msg) => {
         io.to('ops-room').emit('violation-alert', { socketId: socket.id, msg: msg });
-        // تسجيل في ملف نصي
-        fs.appendFileSync('./uploads/logs/violations.txt', `[${new Date().toISOString()}] ${socket.id}: ${msg}\n`);
+        console.log(`⚠️ مخالفة: ${msg}`);
     });
 
-    // --> 5. انقطاع الاتصال
+    // --> 6. انقطاع الاتصال
     socket.on('disconnect', () => {
+        // حذف من القائمة الحية
+        delete activeStudents[socket.id];
+
         if (fileStreams[socket.id]) {
-            fileStreams[socket.id].end(); // إغلاق الملف وحفظه بأمان
+            fileStreams[socket.id].end(); 
             delete fileStreams[socket.id];
             console.log(`💾 تم حفظ فيديو الجلسة: ${socket.id}`);
         }
@@ -100,19 +116,17 @@ io.on('connection', (socket) => {
     });
 });
 
-// استقبال الصور الثابتة
 app.post('/api/upload-photo', upload.single('photo'), (req, res) => {
     console.log(`📸 تم حفظ صورة مخالفة`);
     res.json({ status: 'uploaded' });
 });
 
-// إنهاء الامتحان
 app.post('/api/finish', (req, res) => {
-    console.log(`✅ انتهاء الطالب: ${req.body.studentId} - الدرجة: ${req.body.score}`);
+    console.log(`✅ انتهاء الطالب: ${req.body.studentId}`);
     res.json({ status: 'done' });
 });
 
-// كود HTML لغرفة العمليات (مدمج هنا للسهولة)
+// كود HTML لغرفة العمليات
 const opsRoomHTML = `
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -151,8 +165,9 @@ const opsRoomHTML = `
         const socket = io();
         socket.emit('join-ops');
 
-        // استقبال طالب جديد
+        // استقبال طالب جديد (أو موجود سابقاً)
         socket.on('new-student', (data) => {
+            // منع التكرار
             if(document.getElementById(data.socketId)) return;
             
             const div = document.createElement('div');
@@ -164,14 +179,14 @@ const opsRoomHTML = `
                     <span style="color:#2ea043">● متصل</span>
                 </div>
                 <div class="feed-container">
-                    <img id="img-\${data.socketId}" src="" alt="جاري التحميل...">
+                    <img id="img-\${data.socketId}" src="" alt="جاري استقبال البث...">
                 </div>
                 <div class="status-bar" id="status-\${data.socketId}">الوضع مستقر</div>
             \`;
             document.getElementById('grid').appendChild(div);
         });
 
-        // تحديث الصورة (الفريم)
+        // تحديث الصورة
         socket.on('update-frame', (data) => {
             const img = document.getElementById('img-' + data.socketId);
             if(img) img.src = data.image;
