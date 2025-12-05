@@ -5,13 +5,13 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+// استخدام البورت الخاص بـ Railway أو 3000 للتجربة المحلية
+const PORT = process.env.PORT || 3000;
 
-// تفعيل استقبال البيانات
 app.use(cors());
 app.use(express.json());
 
-// إنشاء المجلدات تلقائياً إذا لم تكن موجودة
+// إعداد المجلدات (في Railway الملفات تحذف عند إعادة التشغيل، لكن هذا ضروري للعمل)
 const dirs = ['./uploads/videos', './uploads/photos', './uploads/logs'];
 dirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
@@ -19,67 +19,52 @@ dirs.forEach(dir => {
     }
 });
 
-// إعداد مكان حفظ الملفات
+// إعداد التخزين
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         if (file.fieldname === 'video') cb(null, './uploads/videos');
         else if (file.fieldname === 'photo') cb(null, './uploads/photos');
     },
     filename: (req, file, cb) => {
-        // تسمية الملف: اسم الطالب_التوقيت.نوع الملف
         cb(null, `${req.body.studentId}_${Date.now()}${path.extname(file.originalname)}`);
     }
 });
-
 const upload = multer({ storage: storage });
 
 // --- الروابط (APIs) ---
 
-// 1. استقبال تسجيل المخالفات
-app.post('/api/violation', (req, res) => {
-    const { studentId, violation } = req.body;
-    const logFile = `./uploads/logs/${studentId}.txt`;
-    
-    const logEntry = `[${new Date().toISOString()}] مخالفة: ${violation}\n`;
-    
-    fs.appendFile(logFile, logEntry, (err) => {
-        if (err) console.error(err);
-    });
-    
-    console.log(`⚠️ مخالفة للطالب ${studentId}: ${violation}`);
-    res.json({ status: 'ok' });
-});
-
-// 2. استقبال صور محاولات الغش
-app.post('/api/upload-photo', upload.single('photo'), (req, res) => {
-    console.log(`📸 تم حفظ صورة مخالفة للطالب: ${req.body.studentId}`);
-    res.json({ status: 'ok' });
-});
-
-// 3. استقبال فيديو الامتحان
-app.post('/api/upload-video', upload.single('video'), (req, res) => {
-    console.log(`📹 تم حفظ مقطع فيديو للطالب: ${req.body.studentId}`);
-    res.json({ status: 'ok' });
-});
-
-// 4. تقرير النهاية
-app.post('/api/finish', (req, res) => {
-    console.log(`✅ أنهى الطالب ${req.body.studentId} الامتحان بدرجة ${req.body.score}`);
-    res.json({ status: 'ok' });
-});
-
-// تشغيل السيرفر
-app.listen(PORT, () => {
-    console.log(`
-    🚀 السيرفر يعمل بنجاح!
-    -----------------------------------
-    🌐 رابط الامتحان: http://localhost:3000
-    📂 ملفات الفيديو ستجدها في: uploads/videos
-    -----------------------------------
-    `);
-});
-
-// تقديم ملف الامتحان عند الدخول للموقع
+// 1. عرض صفحة الامتحان
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 2. تسجيل المخالفات النصية
+app.post('/api/violation', (req, res) => {
+    const { studentId, violation } = req.body;
+    console.log(`⚠️ مخالفة [${studentId}]: ${violation}`);
+    // يمكن هنا إضافة كود لحفظ المخالفة في قاعدة بيانات
+    res.json({ status: 'recorded' });
+});
+
+// 3. رفع الصور (دليل الغش)
+app.post('/api/upload-photo', upload.single('photo'), (req, res) => {
+    console.log(`📸 تم حفظ صورة مخالفة للطالب: ${req.body.studentId}`);
+    res.json({ status: 'uploaded' });
+});
+
+// 4. رفع الفيديو
+app.post('/api/upload-video', upload.single('video'), (req, res) => {
+    console.log(`📹 تم استلام فيديو للطالب: ${req.body.studentId}`);
+    res.json({ status: 'uploaded' });
+});
+
+// 5. إنهاء الامتحان
+app.post('/api/finish', (req, res) => {
+    const { studentId, score } = req.body;
+    console.log(`✅ انتهى الطالب ${studentId} بنتيجة ${score}`);
+    res.json({ status: 'done' });
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
