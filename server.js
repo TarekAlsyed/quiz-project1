@@ -244,6 +244,9 @@ const opsRoomHTML = `
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #30363d; padding-bottom: 15px; margin-bottom: 20px; }
         h1 { margin: 0; text-shadow: 0 0 10px rgba(88, 166, 255, 0.5); }
         .live-badge { background: #da3633; color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; animation: pulse 1.5s infinite; }
+        .sound-btn { background: #1f6feb; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .sound-btn.active { background: #238636; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .student-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; position: relative; transition: 0.3s; }
         .student-card.alert { border-color: #da3633; box-shadow: 0 0 15px rgba(218, 54, 51, 0.5); }
@@ -251,13 +254,17 @@ const opsRoomHTML = `
         .feed-container { width: 100%; height: 225px; background: #000; display: flex; align-items: center; justify-content: center; }
         .feed-container img { width: 100%; height: 100%; object-fit: cover; }
         .status-bar { padding: 5px; text-align: center; font-size: 0.8rem; background: rgba(0,0,0,0.8); position: absolute; bottom: 0; width: 100%; }
+        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>غرفة العمليات والمراقبة</h1>
-        <div class="live-badge">بث مباشر 📡</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button id="soundToggle" class="sound-btn" onclick="activateSound()">🔇 تفعيل الصوت</button>
+            <div class="live-badge">بث مباشر 📡</div>
+        </div>
     </div>
     <div id="grid" class="grid"></div>
 
@@ -265,8 +272,60 @@ const opsRoomHTML = `
         const socket = io();
         socket.emit('join-ops');
 
+        // --- 🔊 نظام الصوت المتطور (Web Audio API) ---
+        let audioCtx;
+        let isSoundActive = false;
+
+        function activateSound() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx.resume().then(() => {
+                isSoundActive = true;
+                const btn = document.getElementById('soundToggle');
+                btn.innerText = "🔊 الصوت مفعل";
+                btn.classList.add('active');
+                // تجربة صوت قصير للتأكيد
+                playAlert(400, 0.1); 
+            });
+        }
+
+        function playSiren() {
+            if (!isSoundActive || !audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            // إعداد سارينة (من تردد منخفض لمرتفع)
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(1000, audioCtx.currentTime + 0.5); // يرتفع الصوت
+            osc.frequency.linearRampToValueAtTime(500, audioCtx.currentTime + 1.0); // ينخفض
+
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.0); // مدة السارينة ثانية واحدة
+        }
+        
+        function playAlert(freq, duration) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // --- Socket Logic ---
+
         socket.on('new-student', (data) => {
             if(document.getElementById(data.socketId)) return;
+            
             const div = document.createElement('div');
             div.id = data.socketId;
             div.className = 'student-card';
@@ -288,7 +347,7 @@ const opsRoomHTML = `
             if(img) img.src = data.image;
         });
 
-        // استقبال مخالفة خطيرة
+        // 🚨 استقبال مخالفة خطيرة وتشغيل السارينة
         socket.on('critical-violation', (data) => {
             const card = document.getElementById(data.socketId);
             if(card) {
@@ -307,9 +366,11 @@ const opsRoomHTML = `
                         🚨 \${data.reason}
                     </div>
                 \`;
-                // تشغيل صوت تنبيه
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
-                audio.play().catch(()=>{});
+                
+                // تشغيل السارينة 3 مرات متتالية
+                playSiren();
+                setTimeout(playSiren, 1200);
+                setTimeout(playSiren, 2400);
             }
         });
 
