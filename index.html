@@ -12,11 +12,9 @@
         * { box-sizing: border-box; transition: all 0.2s ease; outline: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Tajawal', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; font-size: 16px; }
         
-        /* شريط التقدم */
         .progress-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: var(--border); z-index: 2000; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
-        /* القائمة الجانبية */
         .sidebar { width: 260px; background: var(--bg-card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; z-index: 1000; box-shadow: 2px 0 15px rgba(0,0,0,0.05); }
         .brand { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .nav-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
@@ -24,16 +22,13 @@
         .nav-btn:hover { background: var(--bg-body); }
         .nav-btn.active { background: var(--selected); color: var(--primary-dark); border-color: var(--selected-border); }
         
-        /* التحكم بالخط والثيم */
         .controls-row { display: flex; gap: 5px; margin-bottom: 10px; justify-content: center; }
         .icon-btn { background: var(--bg-body); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 0.9rem; }
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* المحتوى الرئيسي */
         .main-content { flex: 1; overflow-y: auto; padding: 20px 40px; position: relative; scroll-behavior: smooth; }
         .section-header { margin: 30px 0 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
         
-        /* الكروت والأسئلة */
         .passage-card { background: var(--bg-card); border-radius: 8px; padding: 25px; margin-bottom: 25px; border-right: 4px solid var(--primary); line-height: 2.2; font-size: 1.1em; text-align: justify; }
         .q-card { background: var(--bg-card); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); position: relative; transition: all 0.3s ease; }
         .flag-toggle { position: absolute; top: 15px; left: 15px; background: transparent; border: none; color: var(--text-light); cursor: pointer; font-size: 1.4rem; z-index: 2; transition: all 0.3s; opacity: 0.5; }
@@ -42,7 +37,6 @@
         .q-card.flagged-card { border-color: var(--flag-color); background-color: var(--flag-bg); box-shadow: 0 0 0 1px var(--flag-color); }
         .q-text { font-size: 1.15rem; font-weight: 700; margin: 10px 0 20px; padding-left: 35px; line-height: 1.6; }
         
-        /* الخيارات */
         .option { background: var(--bg-body); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; gap: 12px; position: relative; transition: all 0.2s; }
         .option:hover { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .option.selected { background: var(--selected); border-color: var(--selected-border); font-weight: 600; }
@@ -52,13 +46,11 @@
         .option.selected .circle { border-color: var(--primary); background: var(--primary); }
         .option.selected .circle::after { content: '✓'; color: white; font-size: 10px; }
         
-        /* التذييل والأزرار */
         .footer-tools { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
         .timer-display { background: var(--text-main); color: var(--bg-body); padding: 8px; border-radius: 6px; text-align: center; font-weight: 800; font-size: 1.2rem; letter-spacing: 2px; }
         .grid-btn { background: var(--bg-body); border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
         .submit-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
         
-        /* المودلز (الشيت والنتيجة) */
         .sheet-modal { position: fixed; bottom: -100%; left: 0; width: 100%; height: 70vh; background: var(--bg-card); z-index: 3000; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); transition: bottom 0.3s; display: flex; flex-direction: column; }
         .sheet-modal.open { bottom: 0; }
         .sheet-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -69,7 +61,6 @@
         .result-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .result-content { background: var(--bg-card); width: 90%; max-width: 450px; padding: 30px; border-radius: 15px; text-align: center; }
         
-        /* الموبايل */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; order: -1; padding: 10px; flex-direction: row; height: auto; align-items: center; border-bottom: 1px solid var(--border); border-left: none; }
@@ -80,7 +71,6 @@
             .mobile-tools { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 10px; z-index: 2500; }
         }
 
-        /* --- أنماط نظام الحماية الجديد --- */
         #cameraPreview {
             position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
             border-radius: 8px; border: 2px solid #ef4444; z-index: 5000;
@@ -93,7 +83,6 @@
         }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* شاشة البدء (المودال) */
         #startModalOverlay {
             position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98);
             z-index: 9999; display: flex; justify-content: center; align-items: center;
@@ -103,7 +92,6 @@
         }
         .start-box ul { text-align: right; margin: 20px 0; line-height: 1.8; color: #333; }
         
-        /* التنبيهات */
         .toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background: #333; color: white; padding: 10px 20px; border-radius: 50px;
@@ -199,7 +187,6 @@
 
     // قاعدة بيانات الأسئلة الكاملة
     const examData = [
-        // ... نفس الأسئلة التي أرسلتها في الردود السابقة (سأضعها كاملة هنا لتعمل مباشرة)
         { type: 'passage', section: 'Read1', content: `<strong>أولاً: القراءة المتحررة (المقال العلمي)</strong><br><br>"عادة تقع الحروب بين طرفي نزاع فشلا في إيجاد مساحة للتفاهم لتحقيق مصلحة مشتركة... والضرر الواقع على البيئة من جراء الحروب يتمثل في تلف الأنظمة البيئية..."` },
         { section: 'Read1', q: 'بمَ قدر الكاتب عدد أشجار الزيتون التي جرفها الاحتلال في فلسطين منذ 1967م؟', options: ['2.5 مليون', '800 ألف', '200 ألف', '100 مليون'], a: 1 },
         { section: 'Read1', q: 'ماذا أفادت عبارة "من منظور بيئي" في بداية الموضوع؟', options: ['تركيز على الخسائر البشرية', 'تركيز على الاقتصاد', 'تناول القضية من زاوية تأثيرها على الطبيعة', 'مقال سياسي'], a: 2 },
@@ -231,12 +218,63 @@
         { section: 'Lit', q: 'اسم "أبولو" دليل على:', options: ['الثقافة العربية', 'الثقافة اليونانية', 'الفرنسية', 'القديم'], a: 1 },
         { section: 'Lit', q: 'من سمات تلاميذ البارودي:', options: ['ترك القديم', 'الارتباط بالصحافة', 'الرمز', 'العامية'], a: 1 },
         { section: 'Lit', q: 'مطران هو الأب الروحي لـ:', options: ['الكلاسيكية', 'الرومانتيكية', 'الواقعية', 'المهجر'], a: 1 },
+        
+        { section: 'Grammar', q: '(ما ضاع معروف يكافئه الشكر). المحل الإعرابي لجملة (يكافئه الشكر):', options: ['نعت (لكلمة معروف)', 'خبر', 'حال', 'مضاف إليه'], a: 0 },
+        { section: 'Grammar', q: '(من لا يغمض عينه عن صديقه ... يمت وهو عاتب). الفعل اللازم في الجملة:', options: ['يغمض', 'يمت', 'يلوم', 'يرضى'], a: 1 },
+        { section: 'Grammar', q: '(ولربما خزن الحليم لسانه .. حذر الجواب). إعراب "حذر":', options: ['حال', 'تمييز', 'مفعول لأجله', 'مفعول به'], a: 2 },
+        { section: 'Grammar', q: '(إياك عزة الغضب). إعراب "عزة":', options: ['خبر', 'مبتدأ', 'مفعول به ثانٍ', 'مفعول به (لفعل محذوف تقديره احذر)'], a: 3 },
+        { section: 'Grammar', q: '(وليس أخوك الدائم العهد بالذي يلومك). خبر ليس:', options: ['أخوك', 'الدائم', 'بالذي (مفرد مجرور لفظاً)', 'يلومك'], a: 2 },
+        { section: 'Grammar', q: '(لا تحمد امرأ حتى تجربه). حكم توكيد الفعل "تحمد" بالنون:', options: ['واجب', 'جائز (لأنه نهي)', 'ممتنع', 'قليل'], a: 1 },
+        { section: 'Grammar', q: '(أقل ما يجب نحو المنعم ... ألا يتوصل بنعمته إلى معصيته). المفضل هو:', options: ['أقل', 'ما يجب', 'ألا يتوصل', 'المنعم'], a: 2 },
+        { section: 'Grammar', q: '(شكراً لمعشر قاموا بمساعٍ حميدة). الممنوع من الصرف المجرور بالفتحة:', options: ['معشر', 'مساعٍ (مجرور بفتحة مقدرة)', 'حميدة', 'شكراً'], a: 1 },
+        { section: 'Grammar', q: 'المصدر الميمي في جملة (موقف السيارات مزدحم - سعى الحجاج مسعىً كريماً):', options: ['موقف', 'مزدحم', 'مسعىً', 'السيارات'], a: 2 },
+        { section: 'Grammar', q: 'عند وضع (لا النافية للجنس) مكان (ليس) في: "ليس ذوو الهمم مقصرين":', options: ['لا ذوو همم مقصرون', 'لا ذوي همم مقصرون', 'لا ذوي همم مقصرين', 'لا ذا همة مقصر'], a: 2 },
+        { section: 'Grammar', q: 'التركيب الصحيح نحوياً لـ (إن):', options: ['إن في التواضع رفعةً', 'إن في التواضع رفعةٌ', 'إن رفعةٌ في التواضع', 'إن رفعةً في التواضع'], a: 0 },
+        { section: 'Grammar', q: 'الجملة التي تحتوي على مفعول معه:', options: ['يذاكر الطالب وضوء المصباح', 'يذاكر الطالب والمصباح مضيء', 'يذاكر الطالب وزميله', 'المصباح مضيء والطالب يذاكر'], a: 0 },
+        { section: 'Grammar', q: '(كم عالمٍ خدم وطنه). عند تحويل كم إلى استفهامية:', options: ['كم عالمٍ', 'كم عالماً', 'كم من عالم', 'كم عوالم'], a: 1 },
+        { section: 'Grammar', q: '(كفى بالله وكيلاً). إعراب لفظ الجلالة:', options: ['فاعل مرفوع بالضمة المقدرة', 'مفعول به', 'اسم مجرور', 'فاعل مجرور لفظاً مرفوع محلاً'], a: 3 },
+        { section: 'Grammar', q: '(متى تسعَ في الخير .... رضا الله). أكمل:', options: ['تنل', 'فتنل', 'فسوف تنل', 'فسوف تنال'], a: 3 },
+        { section: 'Grammar', q: '(لعل المعلمين مخلصون). عند وضع (أوشك) مكان لعل:', options: ['أوشك المعلمين أن يخلصوا', 'أوشك المعلمون مخلصين', 'أوشك المعلمون أن يخلصوا', 'أوشك المعلمون يخلصون'], a: 2 },
+        { section: 'Grammar', q: '(جلس الطالب منتبهاً - جلس الطالب انتباهاً). إعراب ما بين القوسين:', options: ['حال ، مفعول لأجله', 'حال ، مفعول مطلق', 'تمييز ، مفعول مطلق', 'مفعول به ، حال'], a: 0 },
+        { section: 'Grammar', q: 'نكشف عن كلمة (استقامة) في:', options: ['قيم', 'قوم', 'قمم', 'سقم'], a: 1 },
+        { section: 'Grammar', q: '(الرجال يرجون - النساء يرجون). وزن الفعلين:', options: ['يفعون ، يفعلن', 'يفعلون ، يفعون', 'يفعون ، يفعون', 'يفعلن ، يفعلن'], a: 0 },
+        { section: 'Grammar', q: 'اسم المفعول من الفعل (باع):', options: ['مبيوع', 'مُباع', 'مبيع', 'بائع'], a: 2 },
+        { section: 'Grammar', q: '(أعظم بالصدق). إعراب الصدق:', options: ['مفعول به', 'فاعل مجرور لفظاً مرفوع محلاً', 'مبتدأ', 'خبر'], a: 1 },
+        { section: 'Grammar', q: '(كلتا الطالبتين متفوقتان - الطالبتان كلتاهما متفوقتان). إعراب كلتا:', options: ['مبتدأ مرفوع بالضمة المقدرة ، توكيد معنوي', 'توكيد ، مبتدأ ثان', 'مبتدأ مرفوع بالألف ، توكيد', 'مبتدأ ، خبر'], a: 0 },
+        { section: 'Grammar', q: 'اسم الفاعل العامل فيما يلي:', options: ['جاء القاضي إلى المحكمة', 'هذا طالب مجتهد أمس', 'الحسد نار آكلةٌ صاحبَها', 'المهندس مشرف المشروع'], a: 2 },
+        { section: 'Grammar', q: '(قرأت 12 كتاب). الكتابة الصحيحة:', options: ['اثنا عشر كتاباً', 'اثني عشر كتاباً', 'اثنتا عشرة كتاباً', 'اثني عشر كتب'], a: 1 },
+        { section: 'Grammar', q: 'اسم التفضيل من الفعل (لا يخون):', options: ['المصري أجدر ألا يخون', 'المصري أخون من غيره', 'المصري لا يخون أبداً', 'لا يصاغ'], a: 0 },
+        { section: 'Grammar', q: '(حضر الطلاب خلا طالباً). إعراب طالباً:', options: ['اسم مجرور فقط', 'مفعول به فقط', 'جائز الجر والنصب', 'فاعل'], a: 2 },
+        { section: 'Grammar', q: '(يا مصريون اتحدوا). نوع المنادى:', options: ['نكرة مقصودة', 'نكرة غير مقصودة', 'مضاف', 'شبيه بالمضاف'], a: 0 },
+        { section: 'Grammar', q: '(إن في التأني السلامة). حكم تقديم الخبر:', options: ['واجب', 'جائز', 'ممتنع', 'قليل'], a: 0 },
+        { section: 'Grammar', q: '(والله لأذاكرن). حكم توكيد الفعل بالنون:', options: ['واجب', 'جائز', 'ممتنع', 'قليل'], a: 0 },
+        { section: 'Grammar', q: '(ما كان المؤمن ليكذب). نوع اللام:', options: ['لام التعليل', 'لام الجحود', 'لام الأمر', 'لام القسم'], a: 1 },
+        { section: 'Grammar', q: '(من يتقِ الله يجعل له مخرجاً). علامة جزم (يتق):', options: ['السكون', 'حذف النون', 'حذف حرف العلة', 'الضمة'], a: 2 },
+        { section: 'Grammar', q: '(إنما المؤمنون إخوة). عند حذف (ما) تصبح:', options: ['إن المؤمنون إخوة', 'إن المؤمنين إخوة', 'إن المؤمنين أخوات', 'أن المؤمنون إخوة'], a: 1 },
+        { section: 'Grammar', q: '(لا طالب علم كسول). نوع اسم لا:', options: ['مفرد', 'مضاف', 'شبيه بالمضاف', 'علم'], a: 1 },
+        { section: 'Grammar', q: '(العدل قاضٍ به الله). قاضٍ اسم منقوص حذفت ياؤه لأنه:', options: ['نكرة مرفوعة', 'نكرة مجرورة', 'نكرة منصوبة', 'معرفة'], a: 0 },
+        { section: 'Grammar', q: 'الكلمة التي همزتها همزة قطع:', options: ['استخراج', 'انتصار', 'إكرام', 'ابن'], a: 2 },
 
-        // أسئلة النحو مختارة (للإيجاز في الكود لكن يمكنك إضافة الـ35 كاملة)
-        { section: 'Grammar', q: '(ما ضاع معروف يكافئه الشكر). محل (يكافئه الشكر):', options: ['نعت', 'خبر', 'حال', 'مضاف إليه'], a: 0 },
-        { section: 'Grammar', q: '(إياك عزة الغضب). إعراب "عزة":', options: ['خبر', 'مبتدأ', 'مفعول به ثان', 'مفعول به لفعل محذوف'], a: 3 },
-        { section: 'Grammar', q: 'اسم الفاعل العامل:', options: ['جاء القاضي', 'طالب مجتهد أمس', 'الحسد نار آكلة صاحبها', 'مشرف المشروع'], a: 2 },
-        // ... (يمكنك لصق باقي أسئلة النحو والتعبير هنا) ...
+        { section: 'Expr', q: 'الترتيب المنطقي لفقرات مقال عن "التنمر" (النموذج: ظاهرة - أسباب - علاج):', options: ['تعريف التنمر > أسبابه > علاجه', 'علاج التنمر > أسبابه > تعريفه', 'قصص عن التنمر فقط', 'علاج > تعريف > أسباب'], a: 0 },
+        { section: 'Expr', q: 'علامة الترقيم المناسبة مكان النقط: (ما أجمل الصدق ...)', options: ['؟', '.', '!', '،'], a: 2 },
+        { section: 'Expr', q: 'الكلمة المكتوبة خطأ إملائياً:', options: ['لؤلؤ', 'تكافؤ', 'متباطء (الصواب: متباطئ)', 'قارئ'], a: 2 },
+        { section: 'Expr', q: 'عند كتابة "تقرير" يجب مراعاة:', options: ['الخيال والعاطفة', 'الدقة والموضوعية والإيجاز', 'السجع والمحسنات', 'الإطالة'], a: 1 },
+        { section: 'Expr', q: 'الرابط المناسب: (ذاكرت جيداً ..... نجحت).', options: ['لكن', 'لذلك', 'مع ذلك', 'بينما'], a: 1 },
+        { section: 'Expr', q: '(البطالة قنبلة موقوتة). التفصيلة التي تدعم هذا الرأي:', options: ['كثرة أوقات الفراغ للعب', 'ارتفاع معدلات الجريمة والعنف بين الشباب العاطل', 'زيادة عدد السكان', 'بناء المصانع'], a: 1 },
+        { section: 'Expr', q: 'المثل الدال على "الندم":', options: ['سبق السيف العذل', 'رجع بخفي حنين', 'الصيف ضيعت اللبن', 'يداك أوكتا وفوك نفخ'], a: 2 },
+        { section: 'Expr', q: 'كتابة (ابن) الصحيحة في:', options: ['محمد ابن عبد الله', 'محمد بن عبد الله', 'يا ابن الأكرمين (بألف)', 'بن مصر (في أول السطر)'], a: 1 },
+        { section: 'Expr', q: '(كلمة افتتاحية لندوة). العنصر الذي لا غنى عنه:', options: ['وصف الملابس', 'الترحيب بالحضور والتعريف بموضوع الندوة', 'ذكر تفاصيل الطعام', 'الخاتمة'], a: 1 },
+        { section: 'Expr', q: '(نحن ... المصريين ... نحب الوطن). نوع الأسلوب:', options: ['نداء', 'اختصاص', 'تعجب', 'مدح'], a: 1 },
+        { section: 'Expr', q: 'الهمزة في (مساءً) لا يكتب بعدها ألف لأن:', options: ['قبلها ألف مد', 'قبلها واو', 'هي متطرفة', 'منصوبة'], a: 0 },
+        { section: 'Expr', q: '(حبذا الصدق). المخصوص بالمدح:', options: ['ذا', 'الصدق', 'حب', 'محذوف'], a: 1 },
+        { section: 'Expr', q: '(إعادة التدوير). الفكرة الداعمة:', options: ['حرق النفايات يلوث البيئة', 'تحويل المخلفات إلى منتجات جديدة يوفر الطاقة والموارد', 'إلقاء القمامة في الشارع', 'شراء منتجات جديدة'], a: 1 },
+        { section: 'Expr', q: 'علامة الترقيم بين الجمل المتعاطفة:', options: ['النقطة', 'الفاصلة', 'النقطتان', 'علامة الاستفهام'], a: 1 },
+        { section: 'Expr', q: '(يسعى المجتهد ... التفوق). حرف الجر المناسب:', options: ['إلى', 'على', 'في', 'عن'], a: 0 },
+        { section: 'Expr', q: 'الكلمة المخالفة للقياس الصرفي في الجمع:', options: ['مدراء (الصواب: مديرون)', 'معلمون', 'مهندسون', 'حدائق'], a: 0 },
+        { section: 'Expr', q: 'الجملة الخالية من الأخطاء:', options: ['إن عمر ابن الخطاب عادل', 'إن عمر بن الخطاب عادل', 'إن عمرو بن الخطاب عادل'], a: 1 },
+        { section: 'Expr', q: 'أنسب عنوان لفقرة تتحدث عن "أضرار التدخين":', options: ['التدخين والرياضة', 'انتحار بطيء', 'زراعة التبغ', 'المدخن الذكي'], a: 1 },
+        { section: 'Expr', q: 'خاتمة المقال يجب أن تكون:', options: ['بداية لموضوع جديد', 'تلخيصاً لأهم الأفكار ونتيجة حاسمة', 'أطول من العرض', 'مليئة بالأسئلة'], a: 1 },
+        { section: 'Expr', q: '(شخص يطلب المستحيل). المثل المناسب:', options: ['يطلب لبن العصفور', 'يضرب في حديد بارد', 'يحرث في البحر', 'كل ما سبق'], a: 3 }
     ];
 
     // --- متغيرات النظام ---
