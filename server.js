@@ -31,17 +31,47 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// === 🚫 نظام الحظر (Ban System) ===
+const bannedDevices = new Set(); // قائمة الأجهزة المحظورة نهائياً
+const bannedIPs = new Set(); // قائمة الـ IPs المحظورة
+
+// تحميل قائمة الحظر من ملف دائم
+function loadBanList() {
+    try {
+        if(fs.existsSync('./uploads/logs/banned.json')) {
+            const data = JSON.parse(fs.readFileSync('./uploads/logs/banned.json', 'utf8'));
+            data.devices.forEach(d => bannedDevices.add(d));
+            data.ips.forEach(ip => bannedIPs.add(ip));
+            console.log(`🚫 تم تحميل ${bannedDevices.size} جهاز محظور و ${bannedIPs.size} عنوان IP`);
+        }
+    } catch(e) {
+        console.error('خطأ في تحميل قائمة الحظر:', e);
+    }
+}
+
+// حفظ قائمة الحظر
+function saveBanList() {
+    const data = {
+        devices: Array.from(bannedDevices),
+        ips: Array.from(bannedIPs),
+        lastUpdate: new Date().toISOString()
+    };
+    fs.writeFileSync('./uploads/logs/banned.json', JSON.stringify(data, null, 2));
+}
+
+// تحميل القائمة عند بدء السيرفر
+loadBanList();
+
 // === 🎥 متغيرات النظام ===
 const fileStreams = {}; // لتخزين ملفات الفيديو المفتوحة
-const activeStudents = {}; // 🔥 قائمة الطلاب المتصلين حالياً (الاسم + الصورة)
+const activeStudents = {}; // 🔥 قائمة الطلاب المتصلين حالياً
+const activeExams = new Set(); // لمنع دخول نفس الطالب من جهازين
 
 // === 🔗 الروابط ===
-
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// صفحة غرفة العمليات (يتم إنشاؤها ديناميكياً)
 app.get('/ops', (req, res) => {
     res.send(opsRoomHTML);
 });
@@ -49,17 +79,13 @@ app.get('/ops', (req, res) => {
 // === 🔥 نظام Socket.io ===
 io.on('connection', (socket) => {
     
-    // --> 1. دخول المراقب لغرفة العمليات
+    // --> 1. دخول المراقب
     socket.on('join-ops', () => {
         socket.join('ops-room');
         console.log('👮‍♂️ دخل مراقب إلى غرفة العمليات');
-        
-        // 🔥 التعديل الجديد: إرسال كل الطلاب الموجودين حالياً للمراقب الجديد
         const currentIds = Object.keys(activeStudents);
         if(currentIds.length > 0) {
-            console.log(`📡 إرسال بيانات ${currentIds.length} طالب للمراقب الجديد`);
             currentIds.forEach(socketId => {
-                // نرسل للمراقب بيانات الطالب كأنه دخل للتو
                 socket.emit('new-student', { 
                     id: activeStudents[socketId].name, 
                     socketId: socketId 
@@ -68,56 +94,135 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --> 2. بدء البث من الطالب
-    socket.on('start-stream', (studentId) => {
-        console.log(`🔴 بدأ البث: ${studentId}`);
-        
-        // تسجيل الطالب في القائمة الحية
-        activeStudents[socket.id] = { name: studentId, socketId: socket.id };
+    // --> 2. بدء البث من الطالب (مع التحقق من الحظر)
+    socket.on('start-stream', (data) => {
+        const studentId = data.studentId;
+        const deviceId = data.deviceId;
+        const userIP = socket.handshake.address;
+
+        // ✅ التحقق من الحظر
+        if(bannedDevices.has(deviceId)) {
+            console.log(`🚫 محاولة دخول من جهاز محظور: ${deviceId}`);
+            socket.emit('device-banned', {
+                reason: 'هذا الجهاز محظور نهائياً بسبب مخالفات سابقة',
+                bannedAt: 'دائم'
+            });
+            socket.disconnect(true);
+            return;
+        }
+
+        if(bannedIPs.has(userIP)) {
+            console.log(`🚫 محاولة دخول من IP محظور: ${userIP}`);
+            socket.emit('device-banned', {
+                reason: 'هذا الاتصال محظور نهائياً',
+                bannedAt: 'دائم'
+            });
+            socket.disconnect(true);
+            return;
+        }
+
+        // ✅ منع الدخول المزدوج
+        if(activeExams.has(studentId)) {
+            socket.emit('duplicate-session', 'هذا الحساب مفتوح في جهاز آخر!');
+            socket.disconnect();
+            return;
+        }
+
+        console.log(`🔴 بدأ البث: ${studentId} | جهاز: ${deviceId}`);
+        activeExams.add(studentId);
+
+        // تسجيل الطالب
+        activeStudents[socket.id] = { 
+            name: studentId, 
+            socketId: socket.id,
+            deviceId: deviceId,
+            ip: userIP,
+            startTime: new Date()
+        };
 
         const filePath = `./uploads/videos/${studentId}.webm`;
-        // فتح ملف للكتابة المستمرة (Append Mode)
         fileStreams[socket.id] = fs.createWriteStream(filePath, { flags: 'a' });
         
-        // إبلاغ غرفة العمليات بطالب جديد
         io.to('ops-room').emit('new-student', { id: studentId, socketId: socket.id });
     });
 
-    // --> 3. استقبال بيانات الفيديو (للحفظ)
+    // --> 3. استقبال الفيديو
     socket.on('video-chunk', (data) => {
-        if (fileStreams[socket.id]) {
-            fileStreams[socket.id].write(data);
-        }
+        if (fileStreams[socket.id]) fileStreams[socket.id].write(data);
     });
 
-    // --> 4. استقبال "فريم" مباشر (للعرض)
+    // --> 4. استقبال فريم مباشر
     socket.on('live-frame', (imgData) => {
-        // إعادة توجيه الصورة فوراً للمراقبين
         io.to('ops-room').emit('update-frame', { socketId: socket.id, image: imgData });
     });
 
-    // --> 5. استقبال مخالفة
-    socket.on('violation-alert', (msg) => {
-        io.to('ops-room').emit('violation-alert', { socketId: socket.id, msg: msg });
-        console.log(`⚠️ مخالفة: ${msg}`);
+    // --> 5. استقبال مخالفة (مع نظام الحظر الفوري)
+    socket.on('violation-alert', (violationData) => {
+        const student = activeStudents[socket.id];
+        if(!student) return;
+
+        console.log(`⚠️ مخالفة خطيرة من ${student.name}: ${violationData.reason}`);
+        
+        // 🔥 حظر الجهاز والـ IP فوراً
+        bannedDevices.add(student.deviceId);
+        bannedIPs.add(student.ip);
+        saveBanList();
+
+        // تسجيل في ملف Log
+        const logEntry = {
+            studentId: student.name,
+            deviceId: student.deviceId,
+            ip: student.ip,
+            violation: violationData.reason,
+            timestamp: new Date().toISOString(),
+            severity: 'CRITICAL'
+        };
+        const logFile = './uploads/logs/violations.log';
+        fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
+
+        // 🚨 إرسال أمر إنهاء الامتحان للطالب
+        socket.emit('exam-terminated', {
+            reason: violationData.reason,
+            banned: true,
+            message: '⛔ تم إلغاء امتحانك وحظر جهازك نهائياً!'
+        });
+
+        // إبلاغ المراقب
+        io.to('ops-room').emit('critical-violation', {
+            socketId: socket.id,
+            studentName: student.name,
+            deviceId: student.deviceId,
+            reason: violationData.reason
+        });
+
+        // قطع الاتصال بعد 3 ثواني
+        setTimeout(() => {
+            if(fileStreams[socket.id]) {
+                fileStreams[socket.id].end();
+                delete fileStreams[socket.id];
+            }
+            socket.disconnect(true);
+            activeExams.delete(student.name);
+            delete activeStudents[socket.id];
+        }, 3000);
     });
 
     // --> 6. انقطاع الاتصال
     socket.on('disconnect', () => {
-        // حذف من القائمة الحية
-        delete activeStudents[socket.id];
-
+        const student = activeStudents[socket.id];
+        if(student) {
+            activeExams.delete(student.name);
+            delete activeStudents[socket.id];
+        }
         if (fileStreams[socket.id]) {
             fileStreams[socket.id].end(); 
             delete fileStreams[socket.id];
-            console.log(`💾 تم حفظ فيديو الجلسة: ${socket.id}`);
         }
         io.to('ops-room').emit('student-left', { socketId: socket.id });
     });
 });
 
 app.post('/api/upload-photo', upload.single('photo'), (req, res) => {
-    console.log(`📸 تم حفظ صورة مخالفة`);
     res.json({ status: 'uploaded' });
 });
 
@@ -139,18 +244,13 @@ const opsRoomHTML = `
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #30363d; padding-bottom: 15px; margin-bottom: 20px; }
         h1 { margin: 0; text-shadow: 0 0 10px rgba(88, 166, 255, 0.5); }
         .live-badge { background: #da3633; color: white; padding: 5px 15px; border-radius: 50px; font-weight: bold; animation: pulse 1.5s infinite; }
-        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        
         .student-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; position: relative; transition: 0.3s; }
         .student-card.alert { border-color: #da3633; box-shadow: 0 0 15px rgba(218, 54, 51, 0.5); }
-        
         .card-head { background: #21262d; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; }
         .feed-container { width: 100%; height: 225px; background: #000; display: flex; align-items: center; justify-content: center; }
         .feed-container img { width: 100%; height: 100%; object-fit: cover; }
-        
         .status-bar { padding: 5px; text-align: center; font-size: 0.8rem; background: rgba(0,0,0,0.8); position: absolute; bottom: 0; width: 100%; }
-        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
@@ -165,11 +265,8 @@ const opsRoomHTML = `
         const socket = io();
         socket.emit('join-ops');
 
-        // استقبال طالب جديد (أو موجود سابقاً)
         socket.on('new-student', (data) => {
-            // منع التكرار
             if(document.getElementById(data.socketId)) return;
-            
             const div = document.createElement('div');
             div.id = data.socketId;
             div.className = 'student-card';
@@ -186,30 +283,36 @@ const opsRoomHTML = `
             document.getElementById('grid').appendChild(div);
         });
 
-        // تحديث الصورة
         socket.on('update-frame', (data) => {
             const img = document.getElementById('img-' + data.socketId);
             if(img) img.src = data.image;
         });
 
-        // تنبيه مخالفة
-        socket.on('violation-alert', (data) => {
+        // استقبال مخالفة خطيرة
+        socket.on('critical-violation', (data) => {
             const card = document.getElementById(data.socketId);
-            const status = document.getElementById('status-' + data.socketId);
             if(card) {
-                card.classList.add('alert');
-                status.innerText = '⚠️ ' + data.msg;
-                status.style.color = '#ff7b72';
-                
-                setTimeout(() => {
-                    card.classList.remove('alert');
-                    status.innerText = 'الوضع مستقر';
-                    status.style.color = '#58a6ff';
-                }, 5000);
+                card.style.borderColor = '#dc2626';
+                card.style.background = '#7f1d1d';
+                card.innerHTML = \`
+                    <div class="card-head" style="background:#991b1b;">
+                        <span>👤 \${data.studentName}</span>
+                        <span style="color:#fca5a5">🚫 محظور</span>
+                    </div>
+                    <div class="feed-container" style="background:#450a0a; justify-content:center; align-items:center; flex-direction:column; color:#fca5a5;">
+                        <div style="font-size:3rem;">⛔</div>
+                        <div style="margin-top:10px; font-weight:bold;">تم الحظر الدائم</div>
+                    </div>
+                    <div class="status-bar" style="background:#7f1d1d; color:#fca5a5;">
+                        🚨 \${data.reason}
+                    </div>
+                \`;
+                // تشغيل صوت تنبيه
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+                audio.play().catch(()=>{});
             }
         });
 
-        // خروج طالب
         socket.on('student-left', (data) => {
             const card = document.getElementById(data.socketId);
             if(card) {
