@@ -76,6 +76,23 @@ app.get('/ops', (req, res) => {
     res.send(opsRoomHTML);
 });
 
+// === 🔓 رابط سري لفك الحظر (للمسؤول فقط) ===
+app.get('/api/admin/reset-bans', (req, res) => {
+    if(req.query.secret !== '12345') {
+        return res.status(403).send('⛔ غير مسموح لك');
+    }
+    bannedDevices.clear();
+    bannedIPs.clear();
+    try {
+        const data = { devices: [], ips: [], lastUpdate: new Date().toISOString() };
+        fs.writeFileSync('./uploads/logs/banned.json', JSON.stringify(data, null, 2));
+        console.log('♻️ تم تصفير قائمة الحظر بواسطة المسؤول');
+        res.send('✅ تم فك حظر جميع الأجهزة والـ IPs بنجاح! يمكنك الدخول الآن.');
+    } catch(e) {
+        res.status(500).send('حدث خطأ أثناء الحفظ');
+    }
+});
+
 // === 🔥 نظام Socket.io ===
 io.on('connection', (socket) => {
     
@@ -248,13 +265,23 @@ const opsRoomHTML = `
         .sound-btn.active { background: #238636; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .student-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; position: relative; transition: 0.3s; }
+        .student-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; position: relative; transition: 0.3s; cursor: pointer; }
+        .student-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: #58a6ff; }
         .student-card.alert { border-color: #da3633; box-shadow: 0 0 15px rgba(218, 54, 51, 0.5); }
         .card-head { background: #21262d; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; }
-        .feed-container { width: 100%; height: 225px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .feed-container { width: 100%; height: 225px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
         .feed-container img { width: 100%; height: 100%; object-fit: cover; }
         .status-bar { padding: 5px; text-align: center; font-size: 0.8rem; background: rgba(0,0,0,0.8); position: absolute; bottom: 0; width: 100%; }
         
+        /* Zoom Modal */
+        #zoomModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center; flex-direction: column;
+        }
+        #zoomContent { max-width: 95%; max-height: 85%; border: 3px solid #58a6ff; border-radius: 8px; }
+        .close-zoom { color: white; font-size: 2rem; cursor: pointer; position: absolute; top: 20px; right: 30px; }
+        #zoomName { color: #58a6ff; font-size: 1.5rem; margin-bottom: 10px; font-weight: bold; }
+
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
@@ -266,11 +293,38 @@ const opsRoomHTML = `
             <div class="live-badge">بث مباشر 📡</div>
         </div>
     </div>
+    
     <div id="grid" class="grid"></div>
+
+    <div id="zoomModal">
+        <div class="close-zoom" onclick="closeZoom()">✕</div>
+        <div id="zoomName">اسم الطالب</div>
+        <img id="zoomContent" src="" alt="Live Feed">
+        <div style="color:#8b949e; margin-top:10px;">اضغط في أي مكان للإغلاق</div>
+    </div>
 
     <script>
         const socket = io();
         socket.emit('join-ops');
+
+        let currentZoomId = null;
+
+        // --- 🔍 منطق التكبير ---
+        function openZoom(socketId, name) {
+            currentZoomId = socketId;
+            document.getElementById('zoomName').innerText = name;
+            document.getElementById('zoomContent').src = document.getElementById('img-' + socketId).src;
+            document.getElementById('zoomModal').style.display = 'flex';
+        }
+
+        function closeZoom() {
+            currentZoomId = null;
+            document.getElementById('zoomModal').style.display = 'none';
+        }
+
+        document.getElementById('zoomModal').addEventListener('click', (e) => {
+            if(e.target !== document.getElementById('zoomContent')) closeZoom();
+        });
 
         // --- 🔊 نظام الصوت المتطور (Web Audio API) ---
         let audioCtx;
@@ -283,30 +337,23 @@ const opsRoomHTML = `
                 const btn = document.getElementById('soundToggle');
                 btn.innerText = "🔊 الصوت مفعل";
                 btn.classList.add('active');
-                // تجربة صوت قصير للتأكيد
                 playAlert(400, 0.1); 
             });
         }
 
         function playSiren() {
             if (!isSoundActive || !audioCtx) return;
-            
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-
             osc.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-
-            // إعداد سارينة (من تردد منخفض لمرتفع)
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(1000, audioCtx.currentTime + 0.5); // يرتفع الصوت
-            osc.frequency.linearRampToValueAtTime(500, audioCtx.currentTime + 1.0); // ينخفض
-
+            osc.frequency.linearRampToValueAtTime(1000, audioCtx.currentTime + 0.5);
+            osc.frequency.linearRampToValueAtTime(500, audioCtx.currentTime + 1.0);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            
             osc.start();
-            osc.stop(audioCtx.currentTime + 1.0); // مدة السارينة ثانية واحدة
+            osc.stop(audioCtx.currentTime + 1.0);
         }
         
         function playAlert(freq, duration) {
@@ -329,6 +376,9 @@ const opsRoomHTML = `
             const div = document.createElement('div');
             div.id = data.socketId;
             div.className = 'student-card';
+            // إضافة خاصية الضغط للتكبير
+            div.onclick = () => openZoom(data.socketId, data.id);
+            
             div.innerHTML = \`
                 <div class="card-head">
                     <span>👤 \${data.id}</span>
@@ -336,6 +386,7 @@ const opsRoomHTML = `
                 </div>
                 <div class="feed-container">
                     <img id="img-\${data.socketId}" src="" alt="جاري استقبال البث...">
+                    <div style="position:absolute; top:5px; left:5px; background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:4px; font-size:0.7rem; color:white;">🔍 اضغط للتكبير</div>
                 </div>
                 <div class="status-bar" id="status-\${data.socketId}">الوضع مستقر</div>
             \`;
@@ -345,6 +396,11 @@ const opsRoomHTML = `
         socket.on('update-frame', (data) => {
             const img = document.getElementById('img-' + data.socketId);
             if(img) img.src = data.image;
+            
+            // تحديث نافذة التكبير إذا كانت مفتوحة لهذا الطالب
+            if(currentZoomId === data.socketId) {
+                document.getElementById('zoomContent').src = data.image;
+            }
         });
 
         // 🚨 استقبال مخالفة خطيرة وتشغيل السارينة
@@ -367,7 +423,7 @@ const opsRoomHTML = `
                     </div>
                 \`;
                 
-                // تشغيل السارينة 3 مرات متتالية
+                // تشغيل السارينة 3 مرات
                 playSiren();
                 setTimeout(playSiren, 1200);
                 setTimeout(playSiren, 2400);
