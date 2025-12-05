@@ -215,7 +215,7 @@
             }
         }
 
-        /* --- Camera and Modal Styles (New) --- */
+        /* --- Camera and Modal Styles --- */
         #cameraPreview {
             position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
             border-radius: 8px; border: 2px solid #ef4444; z-index: 5000;
@@ -249,13 +249,13 @@
 
 <div id="startModalOverlay">
     <div class="start-box">
-        <h2 style="color:#ef4444;">⚠️ نظام المراقبة والبث المباشر</h2>
+        <h2 style="color:#ef4444;">⚠️ نظام المراقبة والبث المباشر (مشدد)</h2>
         <input type="text" id="studentName" placeholder="أدخل اسمك الثلاثي" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:5px; text-align: right;">
         <ul>
             <li>📹 الامتحان مراقب بنظام البث المباشر (Live Stream).</li>
-            <li>🔴 سيتم تسجيل الفيديو في ملف واحد متصل طوال المدة.</li>
+            <li>🚫 ممنوع استخدام الفأرة الأيمن أو أدوات المطورين.</li>
             <li>🚫 ممنوع الخروج من وضع ملء الشاشة.</li>
-            <li>👁️ ممنوع تبديل الصفحات (سيصل إنذار فوري للمراقب).</li>
+            <li>👁️ أي محاولة غش ستؤدي إلى حظر الجهاز نهائياً.</li>
         </ul>
         <button onclick="initExamSystem()" style="background:#22c55e; color:white; border:none; padding:12px 30px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:1.1rem;">موافق وأبدأ البث والامتحان</button>
     </div>
@@ -275,7 +275,7 @@
     </div>
     
     <div style="background:#fee2e2; padding:10px; border-radius:6px; text-align:center; margin-bottom:10px; border:1px solid #ef4444;">
-        <small style="color:#ef4444; font-weight:bold;">المخالفات: <span id="violationCount">0</span> / 3</small>
+        <small style="color:#ef4444; font-weight:bold;">المخالفات: <span id="violationCount">0</span></small>
     </div>
 
     <div class="controls-row">
@@ -457,8 +457,9 @@
     ];
 
     // --- System Variables ---
-    const socket = io(); // تهيئة الاتصال المباشر
+    const socket = io();
     let studentId = '';
+    let deviceId = '';
     let mediaRecorder;
     let violationCount = 0;
     const MAX_VIOLATIONS = 3;
@@ -473,11 +474,13 @@
 
     // --- Init ---
     window.onload = function() {
-        // التحقق من وضع المعاينة
+        // ⛔ حظر وضع المعاينة تماماً
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('preview') === 'true') {
-            enablePreviewMode();
+            alert('⛔ وضع المعاينة محظور! سيتم إعادة التوجيه.');
+            window.location.href = '/';
         }
+
         if(window.innerWidth <= 768) {
             document.getElementById('mobileTools').style.display = 'flex';
         }
@@ -486,18 +489,21 @@
         renderQuestions();
     };
 
-    function enablePreviewMode() {
-        console.log("🔓 وضع المعاينة مفعل");
-        document.getElementById('startModalOverlay').style.display = 'none';
-        document.getElementById('renderArea').style.filter = 'none';
-        document.getElementById('renderArea').style.pointerEvents = 'auto';
-        document.getElementById('desktopTools').style.display = 'flex';
-        const banner = document.createElement('div');
-        banner.innerHTML = "👁️ وضع المعاينة (للمعلم فقط) - البث معطل";
-        banner.style.cssText = "position:fixed; top:0; left:0; width:100%; background:#fcd34d; color:black; text-align:center; padding:5px; z-index:20000; font-weight:bold;";
-        document.body.appendChild(banner);
-        renderNav();
-        renderQuestions();
+    // إنشاء Device Fingerprint
+    function generateDeviceId() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.fillText("browser,fingerprint", 2, 2);
+        const fingerprint = navigator.userAgent + navigator.language + screen.colorDepth + screen.width + 'x' + screen.height + new Date().getTimezoneOffset() + canvas.toDataURL();
+        let hash = 0;
+        for (let i = 0; i < fingerprint.length; i++) {
+            const char = fingerprint.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return 'DEVICE_' + Math.abs(hash).toString(36).toUpperCase();
     }
 
     async function initExamSystem() {
@@ -505,8 +511,20 @@
         if(nameInput.length < 5) { alert('الرجاء كتابة الاسم الثلاثي'); return; }
         
         studentId = nameInput.replace(/\s/g, '_') + '_' + Date.now();
+        deviceId = generateDeviceId();
+        console.log('🔐 Device ID:', deviceId);
         
         try {
+            // كشف الكاميرات الافتراضية
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(d => d.kind === 'videoinput');
+            const suspiciousNames = ['obs', 'virtual', 'snap', 'manycam', 'xsplit', 'e2e'];
+            const hasFakeCamera = cameras.some(cam => suspiciousNames.some(sus => cam.label.toLowerCase().includes(sus)));
+            if(hasFakeCamera) {
+                alert('⚠️ تم اكتشاف كاميرا افتراضية! يجب استخدام كاميرا حقيقية.');
+                throw new Error('Virtual camera detected');
+            }
+
             // 1. طلب ملء الشاشة
             await document.documentElement.requestFullscreen();
             
@@ -515,8 +533,8 @@
             document.getElementById('userVideo').srcObject = stream;
             document.getElementById('cameraPreview').style.display = 'block';
             
-            // 3. بدء البث المزدوج (مراقبة + تسجيل)
-            startDualStream(stream);
+            // 3. بدء البث المزدوج
+            await startDualStream(stream);
             
             // 4. تفعيل الحماية
             activateProtection();
@@ -527,7 +545,6 @@
             document.getElementById('renderArea').style.pointerEvents = 'auto';
             isExamStarted = true;
             
-            // 6. تحميل الأسئلة
             renderNav();
             renderQuestions();
             startTimer();
@@ -538,51 +555,50 @@
         }
     }
 
-    // --- Live Stream Logic (Dual Stream) ---
+    // --- Live Stream Logic ---
     function startDualStream(stream) {
-        // إبلاغ السيرفر
-        socket.emit('start-stream', studentId);
+        socket.emit('start-stream', { studentId: studentId, deviceId: deviceId });
 
-        // أ) إرسال "فريمات" خفيفة لغرفة العمليات (كل نصف ثانية)
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const video = document.getElementById('userVideo');
         
         setInterval(() => {
             if(!isExamStarted || isSubmitted) return;
-            // جودة منخفضة للمراقبة السريعة
             canvas.width = 320; 
             canvas.height = 240;
             ctx.drawImage(video, 0, 0, 320, 240);
-            // إرسال الصورة كـ Base64 مضغوطة
+            
+            // Watermark
+            ctx.font = 'bold 12px Arial';
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.fillText(`🔴 ${studentId}`, 10, 20);
+            ctx.fillText(new Date().toLocaleTimeString('ar-EG'), 10, 40);
+
             const imageData = canvas.toDataURL('image/jpeg', 0.4);
             socket.emit('live-frame', imageData);
         }, 500);
 
-        // ب) تسجيل فيديو عالي الجودة للسيرفر (Streaming Chunks)
         mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8', videoBitsPerSecond: 1500000 });
-        
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0 && isExamStarted) {
-                // إرسال البيانات الثقيلة للحفظ في الملف
                 socket.emit('video-chunk', event.data);
             }
         };
-        
-        // إرسال البيانات كل ثانية (لضمان حفظ الملف أولاً بأول)
         mediaRecorder.start(1000); 
     }
 
-    // --- Anti-Cheat ---
+    // --- Anti-Cheat (مشدد) ---
     function activateProtection() {
+        // 1. الخروج من ملء الشاشة
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement && isExamStarted && !isSubmitted) {
                 recordViolation("الخروج من وضع ملء الشاشة");
-                alert("⚠️ تحذير: ارجع للشاشة الكاملة فوراً!");
                 setTimeout(() => document.documentElement.requestFullscreen().catch(()=>{}), 1000);
             }
         });
 
+        // 2. تبديل النافذة
         window.addEventListener('blur', () => {
             if (isExamStarted && !isSubmitted) {
                 recordViolation("تبديل النافذة / الخروج من الصفحة");
@@ -590,13 +606,48 @@
             }
         });
 
+        // 3. منع أدوات المطورين والزر الأيمن
+        document.addEventListener('contextmenu', (e) => { e.preventDefault(); recordViolation("محاولة استخدام الزر الأيمن"); });
+        
         document.addEventListener('keydown', (e) => {
             if (!isExamStarted) return;
-            if ((e.altKey && e.key === 'Tab') || e.key === 'F12' || e.key === 'PrintScreen') {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'U')) {
                 e.preventDefault();
-                recordViolation("محاولة استخدام أزرار محظورة");
+                recordViolation("محاولة فتح أدوات المطورين");
+            }
+            if(e.key === 'PrintScreen') {
+                recordViolation("محاولة أخذ لقطة شاشة");
+                navigator.clipboard.writeText(''); // إفراغ الحافظة
             }
         });
+
+        // 4. كشف DevTools المتقدم
+        (function() {
+            let devtoolsOpen = false;
+            const threshold = 160;
+            setInterval(() => {
+                if(window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+                    if(!devtoolsOpen) {
+                        devtoolsOpen = true;
+                        recordViolation("فتح أدوات المطورين (DevTools)");
+                    }
+                } else {
+                    devtoolsOpen = false;
+                }
+            }, 500);
+            // Debugger Trap
+            setInterval(() => {
+                const start = performance.now();
+                debugger;
+                const end = performance.now();
+                if(end - start > 100) recordViolation("محاولة استخدام Debugger");
+            }, 1000);
+        })();
+
+        // 5. كشف الشاشات المتعددة
+        if(window.screen.isExtended || screen.availWidth > window.screen.width) {
+            recordViolation("استخدام أكثر من شاشة");
+        }
     }
 
     function recordViolation(reason) {
@@ -605,18 +656,19 @@
         violationCount++;
         document.getElementById('violationCount').innerText = violationCount;
         
-        // إرسال تنبيه فوري للسيرفر (Live Alert)
-        socket.emit('violation-alert', reason);
+        // إرسال تنبيه للسيرفر (هو الذي يقرر الحظر)
+        socket.emit('violation-alert', {
+            reason: reason,
+            count: violationCount,
+            timestamp: new Date().toISOString(),
+            deviceId: deviceId
+        });
         
         const div = document.createElement('div');
         div.className = 'toast';
         div.innerText = `⚠️ مخالفة مسجلة: ${reason}`;
         document.body.appendChild(div);
         setTimeout(()=>div.remove(), 3000);
-
-        if (violationCount >= MAX_VIOLATIONS) {
-            submitExam(true);
-        }
     }
 
     function captureEvidence() {
@@ -625,12 +677,10 @@
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
         canvas.toBlob(blob => {
             const fd = new FormData();
             fd.append('photo', blob, 'violation.jpg');
             fd.append('studentId', studentId);
-            // الصور ما زالت ترفع عبر HTTP لأنها أسرع للصور الثابتة
             fetch('/api/upload-photo', { method: 'POST', body: fd }).catch(()=>{});
         });
     }
@@ -733,7 +783,6 @@
                     if(i === ans) el.classList.add('selected');
                 }
             }
-            // Flag logic restoration
             const flagBtn = document.getElementById(`flag-${qIdx}`);
             const card = document.getElementById(`q-card-${qIdx}`);
             if(flagBtn && card) {
@@ -792,27 +841,46 @@
         setTimeout(() => el.style.boxShadow = "none", 1000);
     }
 
-    // --- Local Storage ---
+    // --- Secure Local Storage ---
+    function generateHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString(36);
+    }
+
     function saveProgress() {
         const state = {
             answers: userAnswers,
             flags: Array.from(flaggedQuestions),
             eliminated: eliminatedOptions,
-            time: timerDuration
+            time: timerDuration,
+            hash: generateHash(userAnswers.toString() + timerDuration)
         };
-        localStorage.setItem('examProgress_v3', JSON.stringify(state));
+        const encrypted = btoa(JSON.stringify(state));
+        localStorage.setItem('examProgress_v3', encrypted);
     }
 
     function loadProgress() {
         const saved = localStorage.getItem('examProgress_v3');
         if(saved) {
             try {
-                const state = JSON.parse(saved);
-                if(state.answers.length === userAnswers.length) {
-                    userAnswers = state.answers;
-                    flaggedQuestions = new Set(state.flags);
-                    eliminatedOptions = state.eliminated || {};
-                    timerDuration = state.time > 0 ? state.time : 3*3600;
+                const decrypted = JSON.parse(atob(saved));
+                const expectedHash = generateHash(decrypted.answers.toString() + decrypted.time);
+                
+                if(decrypted.hash !== expectedHash) {
+                    localStorage.removeItem('examProgress_v3');
+                    return;
+                }
+
+                if(decrypted.answers.length === userAnswers.length) {
+                    userAnswers = decrypted.answers;
+                    flaggedQuestions = new Set(decrypted.flags);
+                    eliminatedOptions = decrypted.eliminated || {};
+                    timerDuration = decrypted.time > 0 ? decrypted.time : 3*3600;
                 }
             } catch(e) {}
         }
@@ -858,7 +926,6 @@
         clearInterval(timerInterval);
         clearProgress();
         
-        // إيقاف البث والتسجيل
         if(mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
@@ -869,7 +936,6 @@
         
         document.exitFullscreen().catch(()=>{});
 
-        // حساب الدرجة
         let score = 0;
         let qIdx = 0;
         examData.forEach(item => {
@@ -879,7 +945,6 @@
             }
         });
 
-        // إرسال النتيجة
         fetch('/api/finish', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -920,6 +985,39 @@
         });
         window.scrollTo({top:0, behavior:'smooth'});
     }
+
+    // --- Listeners for Ban Events ---
+    socket.on('device-banned', (data) => {
+        isSubmitted = true;
+        clearInterval(timerInterval);
+        if(mediaRecorder) mediaRecorder.stop();
+        document.body.innerHTML = `
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background: #000; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <h1 style="color:red; font-size:3rem;">⛔ جهازك محظور</h1>
+                <p>${data.reason}</p>
+            </div>
+        `;
+    });
+
+    socket.on('exam-terminated', (data) => {
+        isSubmitted = true;
+        clearInterval(timerInterval);
+        if(mediaRecorder) mediaRecorder.stop();
+        document.exitFullscreen().catch(()=>{});
+        
+        document.body.innerHTML = `
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background: #1f2937; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <h1 style="color:#ef4444; font-size:3rem;">❌ تم إلغاء الامتحان</h1>
+                <p style="font-size:1.5rem;">${data.reason}</p>
+                <p>تم حظر هذا الجهاز نهائياً من دخول المنصة.</p>
+            </div>
+        `;
+    });
+    
+    socket.on('duplicate-session', (msg) => {
+        alert('⛔ ' + msg);
+        window.location.reload();
+    });
 </script>
 </body>
 </html>
