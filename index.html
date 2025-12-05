@@ -7,61 +7,201 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* --- CSS الأساسي --- */
-        :root { --primary: #0f766e; --primary-dark: #115e59; --accent: #f59e0b; --bg-body: #f3f4f6; --bg-card: #ffffff; --text-main: #1f2937; --text-light: #6b7280; --border: #e5e7eb; --selected: #e0f2fe; --selected-border: #0ea5e9; --correct-bg: #dcfce7; --correct-border: #22c55e; --wrong-bg: #fee2e2; --wrong-border: #ef4444; --flag-color: #ef4444; --flag-bg: #fef2f2; }
-        body.dark-mode { --primary: #2dd4bf; --primary-dark: #14b8a6; --accent: #fbbf24; --bg-body: #0f172a; --bg-card: #1e293b; --text-main: #f1f5f9; --text-light: #94a3b8; --border: #334155; --selected: #172554; --selected-border: #38bdf8; --correct-bg: #064e3b; --correct-border: #34d399; --wrong-bg: #7f1d1d; --wrong-border: #f87171; --flag-color: #f87171; --flag-bg: #450a0a; }
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #115e59;
+            --accent: #f59e0b;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --selected: #e0f2fe;
+            --selected-border: #0ea5e9;
+            --correct-bg: #dcfce7;
+            --correct-border: #22c55e;
+            --wrong-bg: #fee2e2;
+            --wrong-border: #ef4444;
+            --flag-color: #ef4444;
+            --flag-bg: #fef2f2;
+        }
+
+        body.dark-mode {
+            --primary: #2dd4bf;
+            --primary-dark: #14b8a6;
+            --accent: #fbbf24;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --selected: #172554;
+            --selected-border: #38bdf8;
+            --correct-bg: #064e3b;
+            --correct-border: #34d399;
+            --wrong-bg: #7f1d1d;
+            --wrong-border: #f87171;
+            --flag-color: #f87171;
+            --flag-bg: #450a0a;
+        }
+
         * { box-sizing: border-box; transition: all 0.2s ease; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; font-size: 16px; }
         
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0; display: flex; height: 100vh; overflow: hidden; font-size: 16px;
+        }
+
+        /* Progress Line */
         .progress-line { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: var(--border); z-index: 2000; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
-        .sidebar { width: 260px; background: var(--bg-card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; z-index: 1000; box-shadow: 2px 0 15px rgba(0,0,0,0.05); }
+        /* Sidebar */
+        .sidebar {
+            width: 260px; background: var(--bg-card); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 15px; z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+        }
+
         .brand { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
         .nav-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .nav-btn { background: transparent; border: 1px solid transparent; padding: 10px; border-radius: 6px; text-align: right; cursor: pointer; font-weight: 600; color: var(--text-main); font-size: 0.9rem; display: flex; justify-content: space-between; }
+        .nav-btn {
+            background: transparent; border: 1px solid transparent; padding: 10px; border-radius: 6px;
+            text-align: right; cursor: pointer; font-weight: 600; color: var(--text-main); font-size: 0.9rem;
+            display: flex; justify-content: space-between;
+        }
         .nav-btn:hover { background: var(--bg-body); }
         .nav-btn.active { background: var(--selected); color: var(--primary-dark); border-color: var(--selected-border); }
         
+        /* Font Controls */
         .controls-row { display: flex; gap: 5px; margin-bottom: 10px; justify-content: center; }
-        .icon-btn { background: var(--bg-body); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 0.9rem; }
+        .icon-btn {
+            background: var(--bg-body); border: 1px solid var(--border); width: 32px; height: 32px;
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-main); font-size: 0.9rem;
+        }
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
 
+        /* Main Area */
         .main-content { flex: 1; overflow-y: auto; padding: 20px 40px; position: relative; scroll-behavior: smooth; }
+
         .section-header { margin: 30px 0 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+
+        .passage-card {
+            background: var(--bg-card); border-radius: 8px; padding: 25px; margin-bottom: 25px;
+            border-right: 4px solid var(--primary); line-height: 2.2; font-size: 1.1em; text-align: justify;
+        }
         
-        .passage-card { background: var(--bg-card); border-radius: 8px; padding: 25px; margin-bottom: 25px; border-right: 4px solid var(--primary); line-height: 2.2; font-size: 1.1em; text-align: justify; }
-        .q-card { background: var(--bg-card); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); position: relative; transition: all 0.3s ease; }
-        .flag-toggle { position: absolute; top: 15px; left: 15px; background: transparent; border: none; color: var(--text-light); cursor: pointer; font-size: 1.4rem; z-index: 2; transition: all 0.3s; opacity: 0.5; }
+        .q-card {
+            background: var(--bg-card); border-radius: 10px; padding: 20px; margin-bottom: 20px;
+            border: 1px solid var(--border); position: relative; transition: all 0.3s ease;
+        }
+
+        /* Flag Button Styling */
+        .flag-toggle {
+            position: absolute; top: 15px; left: 15px; background: transparent; border: none;
+            color: var(--text-light); cursor: pointer; font-size: 1.4rem; z-index: 2;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0.5;
+        }
         .flag-toggle:hover { opacity: 1; transform: scale(1.1); }
-        .flag-toggle.active { color: var(--flag-color); opacity: 1; transform: scale(1.2); }
-        .q-card.flagged-card { border-color: var(--flag-color); background-color: var(--flag-bg); box-shadow: 0 0 0 1px var(--flag-color); }
-        .q-text { font-size: 1.15rem; font-weight: 700; margin: 10px 0 20px; padding-left: 35px; line-height: 1.6; }
         
-        .option { background: var(--bg-body); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; gap: 12px; position: relative; transition: all 0.2s; }
+        /* Active Flag State (Button) */
+        .flag-toggle.active {
+            color: var(--flag-color);
+            opacity: 1;
+            transform: scale(1.2);
+            filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
+        }
+
+        /* Active Flag State (Card) */
+        .q-card.flagged-card {
+            border-color: var(--flag-color);
+            background-color: var(--flag-bg);
+            box-shadow: 0 0 0 1px var(--flag-color), 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .q-text { font-size: 1.15rem; font-weight: 700; margin: 10px 0 20px; padding-left: 35px; line-height: 1.6; }
+
+        /* Options */
+        .option {
+            background: var(--bg-body); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px;
+            cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; gap: 12px;
+            position: relative; transition: all 0.2s;
+        }
         .option:hover { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .option.selected { background: var(--selected); border-color: var(--selected-border); font-weight: 600; }
+        
+        /* Strikethrough Logic */
         .option.eliminated { opacity: 0.5; text-decoration: line-through; background: #eee; border-color: transparent !important; }
-        .strike-btn { margin-right: auto; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; color: var(--text-light); cursor: pointer; font-size: 0.7rem; }
-        .circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+        .option.eliminated .circle { border-color: #bbb; }
+        .strike-btn {
+            margin-right: auto; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border);
+            background: var(--bg-card); display: flex; align-items: center; justify-content: center;
+            color: var(--text-light); cursor: pointer; font-size: 0.7rem;
+        }
+        .strike-btn:hover { color: var(--wrong-border); border-color: var(--wrong-border); }
+
+        .circle {
+            width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; flex-shrink: 0;
+            display: flex; justify-content: center; align-items: center;
+        }
         .option.selected .circle { border-color: var(--primary); background: var(--primary); }
         .option.selected .circle::after { content: '✓'; color: white; font-size: 10px; }
-        
-        .footer-tools { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        .timer-display { background: var(--text-main); color: var(--bg-body); padding: 8px; border-radius: 6px; text-align: center; font-weight: 800; font-size: 1.2rem; letter-spacing: 2px; }
-        .grid-btn { background: var(--bg-body); border: 1px dashed var(--primary); color: var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .submit-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
-        
-        .sheet-modal { position: fixed; bottom: -100%; left: 0; width: 100%; height: 70vh; background: var(--bg-card); z-index: 3000; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); transition: bottom 0.3s; display: flex; flex-direction: column; }
+
+        /* Review Styles */
+        body.review-mode .option { cursor: default; pointer-events: none; }
+        body.review-mode .option.correct-ans { background: var(--correct-bg) !important; border-color: var(--correct-border) !important; }
+        body.review-mode .option.wrong-ans { background: var(--wrong-bg) !important; border-color: var(--wrong-border) !important; }
+
+        /* Footer */
+        .footer-tools {
+            margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .timer-display {
+            background: var(--text-main); color: var(--bg-body); padding: 8px; border-radius: 6px;
+            text-align: center; font-weight: 800; font-size: 1.2rem; letter-spacing: 2px;
+        }
+        .grid-btn {
+            background: var(--bg-body); border: 1px dashed var(--primary); color: var(--primary);
+            padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;
+        }
+        .submit-btn {
+            background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px;
+            cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem;
+        }
+
+        /* Question Map Modal */
+        .sheet-modal {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 70vh; background: var(--bg-card);
+            z-index: 3000; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
         .sheet-modal.open { bottom: 0; }
         .sheet-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .sheet-grid { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 10px; align-content: start; }
-        .bubble { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; background: var(--bg-body); font-size: 0.9rem; }
+        
+        .bubble {
+            width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer;
+            background: var(--bg-body); font-size: 0.9rem;
+        }
         .bubble.answered { background: var(--primary); color: white; border-color: var(--primary); }
         .bubble.flagged { background: var(--flag-color); color: white; border-color: var(--flag-color); }
-        .result-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .result-content { background: var(--bg-card); width: 90%; max-width: 450px; padding: 30px; border-radius: 15px; text-align: center; }
-        
+
+        /* Result Modal */
+        .result-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+            z-index: 4000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        }
+        .result-content {
+            background: var(--bg-card); width: 90%; max-width: 450px; padding: 30px; border-radius: 15px; text-align: center;
+        }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; order: -1; padding: 10px; flex-direction: row; height: auto; align-items: center; border-bottom: 1px solid var(--border); border-left: none; }
@@ -69,9 +209,13 @@
             .nav-items { flex-direction: row; overflow-x: auto; padding-bottom: 5px; }
             .nav-btn { white-space: nowrap; padding: 6px 12px; font-size: 0.8rem; }
             .main-content { padding: 15px; padding-bottom: 100px; }
-            .mobile-tools { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 10px; z-index: 2500; }
+            .mobile-tools {
+                position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card);
+                border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 10px; z-index: 2500;
+            }
         }
 
+        /* --- Camera and Modal Styles (New) --- */
         #cameraPreview {
             position: fixed; bottom: 20px; left: 20px; width: 160px; height: 120px;
             border-radius: 8px; border: 2px solid #ef4444; z-index: 5000;
@@ -155,7 +299,7 @@
     <button class="submit-btn" onclick="submitExam()" style="width:auto; padding:0 20px;">تسليم</button>
 </div>
 
-<main class="main-content" id="renderArea" style="filter: blur(5px); pointer-events: none;"></main>
+<main class="main-content" id="renderArea"></main>
 
 <div class="sheet-modal" id="sheetModal">
     <div class="sheet-header">
@@ -172,6 +316,8 @@
         <div style="color:var(--text-light); margin-bottom:20px;">من 80 درجة</div>
         <div id="feedback" style="background:var(--bg-body); padding:10px; border-radius:8px; margin-bottom:15px; text-align:right;"></div>
         <p style="color:green; font-weight:bold; font-size:0.9rem;">تم حفظ البث المباشر ورفع التقرير بنجاح ✅</p>
+        <button class="submit-btn" onclick="startReview()">🔍 مراجعة الإجابات</button>
+        <button class="grid-btn" onclick="clearProgress(); location.reload();" style="margin-top:10px; border-style:solid;">🔄 امتحان جديد</button>
     </div>
 </div>
 
@@ -186,7 +332,6 @@
         { id: 'Expr', title: 'سادساً: التعبير', count: 20 }
     ];
 
-    // --- الأسئلة الكاملة (80 سؤال + القطع) ---
     const examData = [
         // === أولاً: القراءة المتحررة (المقال العلمي) ===
         {
@@ -336,6 +481,9 @@
         if(window.innerWidth <= 768) {
             document.getElementById('mobileTools').style.display = 'flex';
         }
+        loadProgress();
+        renderNav();
+        renderQuestions();
     };
 
     function enablePreviewMode() {
@@ -367,8 +515,8 @@
             document.getElementById('userVideo').srcObject = stream;
             document.getElementById('cameraPreview').style.display = 'block';
             
-            // 3. بدء البث المباشر
-            startLiveStream(stream);
+            // 3. بدء البث المزدوج (مراقبة + تسجيل)
+            startDualStream(stream);
             
             // 4. تفعيل الحماية
             activateProtection();
@@ -383,28 +531,45 @@
             renderNav();
             renderQuestions();
             startTimer();
+            updateUI();
             
         } catch (err) {
             alert('⚠️ خطأ: يجب السماح للكاميرا وملء الشاشة لبدء الامتحان!\n' + err.message);
         }
     }
 
-    // --- Live Stream Logic (Socket.io) ---
-    function startLiveStream(stream) {
-        // إبلاغ السيرفر ببدء البث
+    // --- Live Stream Logic (Dual Stream) ---
+    function startDualStream(stream) {
+        // إبلاغ السيرفر
         socket.emit('start-stream', studentId);
 
-        // تسجيل وإرسال البيانات كل ثانية (لكن السيرفر يجمعها في ملف واحد)
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8' });
+        // أ) إرسال "فريمات" خفيفة لغرفة العمليات (كل نصف ثانية)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const video = document.getElementById('userVideo');
+        
+        setInterval(() => {
+            if(!isExamStarted || isSubmitted) return;
+            // جودة منخفضة للمراقبة السريعة
+            canvas.width = 320; 
+            canvas.height = 240;
+            ctx.drawImage(video, 0, 0, 320, 240);
+            // إرسال الصورة كـ Base64 مضغوطة
+            const imageData = canvas.toDataURL('image/jpeg', 0.4);
+            socket.emit('live-frame', imageData);
+        }, 500);
+
+        // ب) تسجيل فيديو عالي الجودة للسيرفر (Streaming Chunks)
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8', videoBitsPerSecond: 1500000 });
         
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0 && isExamStarted) {
-                // إرسال البيانات مباشرة عبر السوكيت
+                // إرسال البيانات الثقيلة للحفظ في الملف
                 socket.emit('video-chunk', event.data);
             }
         };
         
-        // إرسال البيانات كل 1000 ملي ثانية (ثانية واحدة) لضمان البث السلس
+        // إرسال البيانات كل ثانية (لضمان حفظ الملف أولاً بأول)
         mediaRecorder.start(1000); 
     }
 
@@ -470,7 +635,7 @@
         });
     }
 
-    // --- Rendering Logic (Similar to before) ---
+    // --- Rendering Logic ---
     function renderNav() {
         const container = document.getElementById('navContainer');
         container.innerHTML = sectionsConfig.map(sec => `
@@ -486,13 +651,6 @@
         let html = '';
         let qCounter = 0;
         
-        // ملء مصفوفة الإجابات بناء على العدد الفعلي
-        let totalQ = 0;
-        examData.forEach(d => { if(d.type !== 'passage') totalQ++; });
-        if (userAnswers.length !== totalQ) {
-             userAnswers = new Array(totalQ).fill(null);
-        }
-
         sectionsConfig.forEach(sec => {
             const items = examData.filter(d => d.section === sec.id);
             if(items.length === 0) return;
@@ -525,11 +683,13 @@
             });
         });
         container.innerHTML = html;
+        restoreUIState();
     }
 
     function selectOption(qIdx, optIdx) {
         if(isSubmitted || (eliminatedOptions[qIdx] && eliminatedOptions[qIdx].includes(optIdx))) return;
         userAnswers[qIdx] = optIdx;
+        saveProgress();
         updateUI();
     }
 
@@ -540,6 +700,7 @@
         const arr = eliminatedOptions[qIdx];
         if(arr.includes(optIdx)) eliminatedOptions[qIdx] = arr.filter(x => x !== optIdx);
         else arr.push(optIdx);
+        saveProgress();
         updateOptionStyle(qIdx, optIdx);
     }
 
@@ -555,6 +716,7 @@
             btn.classList.add('active');
             card.classList.add('flagged-card');
         }
+        saveProgress();
         updateSheet();
     }
 
@@ -569,6 +731,18 @@
                 if(el) {
                     el.classList.remove('selected');
                     if(i === ans) el.classList.add('selected');
+                }
+            }
+            // Flag logic restoration
+            const flagBtn = document.getElementById(`flag-${qIdx}`);
+            const card = document.getElementById(`q-card-${qIdx}`);
+            if(flagBtn && card) {
+                if(flaggedQuestions.has(qIdx)) {
+                    flagBtn.classList.add('active');
+                    card.classList.add('flagged-card');
+                } else {
+                    flagBtn.classList.remove('active');
+                    card.classList.remove('flagged-card');
                 }
             }
         });
@@ -586,6 +760,13 @@
         } else {
             el.classList.remove('eliminated');
         }
+    }
+
+    function restoreUIState() {
+        for (const [qIdx, opts] of Object.entries(eliminatedOptions)) {
+            opts.forEach(optIdx => updateOptionStyle(parseInt(qIdx), optIdx));
+        }
+        updateUI();
     }
 
     function toggleSheet() {
@@ -611,11 +792,42 @@
         setTimeout(() => el.style.boxShadow = "none", 1000);
     }
 
+    // --- Local Storage ---
+    function saveProgress() {
+        const state = {
+            answers: userAnswers,
+            flags: Array.from(flaggedQuestions),
+            eliminated: eliminatedOptions,
+            time: timerDuration
+        };
+        localStorage.setItem('examProgress_v3', JSON.stringify(state));
+    }
+
+    function loadProgress() {
+        const saved = localStorage.getItem('examProgress_v3');
+        if(saved) {
+            try {
+                const state = JSON.parse(saved);
+                if(state.answers.length === userAnswers.length) {
+                    userAnswers = state.answers;
+                    flaggedQuestions = new Set(state.flags);
+                    eliminatedOptions = state.eliminated || {};
+                    timerDuration = state.time > 0 ? state.time : 3*3600;
+                }
+            } catch(e) {}
+        }
+    }
+
+    function clearProgress() {
+        localStorage.removeItem('examProgress_v3');
+    }
+
     function startTimer() {
         const display = document.getElementById('timerDisplay');
         const mobileDisplay = document.getElementById('mobileTimer');
         timerInterval = setInterval(() => {
             timerDuration--;
+            saveProgress();
             let h = Math.floor(timerDuration / 3600);
             let m = Math.floor((timerDuration % 3600) / 60);
             let s = timerDuration % 60;
@@ -644,6 +856,7 @@
     function submitExam(force = false) {
         isSubmitted = true;
         clearInterval(timerInterval);
+        clearProgress();
         
         // إيقاف البث والتسجيل
         if(mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -686,6 +899,26 @@
         
         document.getElementById('feedback').innerHTML = `<strong>التقدير:</strong> ${msg}`;
         document.getElementById('resultModal').style.display = 'flex';
+    }
+
+    function startReview() {
+        document.getElementById('resultModal').style.display = 'none';
+        document.body.classList.add('review-mode');
+        
+        let qIdx = 0;
+        examData.forEach(item => {
+            if(item.type !== 'passage') {
+                const correctOpt = document.getElementById(`opt-${qIdx}-${item.a}`);
+                if(correctOpt) correctOpt.classList.add('correct-ans');
+                
+                if(userAnswers[qIdx] !== null && userAnswers[qIdx] !== item.a) {
+                    const wrongOpt = document.getElementById(`opt-${qIdx}-${userAnswers[qIdx]}`);
+                    if(wrongOpt) wrongOpt.classList.add('wrong-ans');
+                }
+                qIdx++;
+            }
+        });
+        window.scrollTo({top:0, behavior:'smooth'});
     }
 </script>
 </body>
