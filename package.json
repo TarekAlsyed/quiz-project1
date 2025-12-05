@@ -1,7 +1,7 @@
 {
-  "name": "exam-anti-cheat-system",
+  "name": "quiz-project1",
   "version": "1.0.0",
-  "description": "نظام امتحان آمن مع مراقبة الكاميرا",
+  "description": "نظام امتحان آمن مع مراقبة",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
